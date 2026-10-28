@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gezinsplanner</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#F4F6F9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1824" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Gezinsplanner">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="description" content="Agenda, taken, lijsten en weekmenu voor het hele gezin.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Figtree:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F4F6F9;--card:#fff;--ink:#14263B;--mute:#5F6F82;--line:#E1E6EE;--acc:#14263B;--onacc:#fff;--hi:#FFD23F;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1824;--card:#172435;--ink:#EEF2F7;--mute:#9AA9BB;--line:#263548;--acc:#FFD23F;--onacc:#14263B;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0E1824;--card:#172435;--ink:#EEF2F7;--mute:#9AA9BB;--line:#263548;--acc:#FFD23F;--onacc:#14263B;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 Figtree,system-ui,sans-serif;padding-bottom:84px;max-width:640px;margin-inline:auto}
+h1,h2{font-family:"Bricolage Grotesque",Figtree,sans-serif;margin:0}
+h1{font-size:2rem;font-weight:800;line-height:1.1;letter-spacing:-.02em}
+h2{font-size:1.1rem;font-weight:600;margin-bottom:8px}
+main{padding:0 16px 16px}
+.top{padding:20px 0 4px}
+.sub{color:var(--mute);margin:4px 0 0;text-transform:capitalize}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:14px 0 6px}
+.chip{flex:none;border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:99px;padding:7px 14px;font:inherit;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px}
+.chip.on{background:var(--acc);color:var(--onacc);border-color:var(--acc)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;margin-top:14px}
+.row{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.row:first-of-type{border-top:0}
+.grow{flex:1;min-width:0}
+.time{width:56px;color:var(--mute);font-size:.9rem;font-weight:600}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
+.dots{margin-top:2px}
+.mute{color:var(--mute)}
+.empty{color:var(--mute);padding:6px 0}
+button{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
+.x{border:0;background:none;color:var(--mute);font-size:1.4rem;cursor:pointer;padding:4px 8px}
+.ck{flex:none;width:28px;height:28px;border-radius:9px;border:2px solid var(--mute);background:none;cursor:pointer;position:relative}
+.ck.on{background:var(--acc);border-color:var(--acc)}
+.ck.on::after{content:"";position:absolute;left:8px;top:3px;width:6px;height:12px;border:solid var(--onacc);border-width:0 3px 3px 0;transform:rotate(40deg)}
+.done{text-decoration:line-through;color:var(--mute)}
+.pts{background:var(--hi);color:#14263B;border-radius:8px;padding:2px 8px;font-weight:700;font-size:.85rem}
+.btn{background:var(--acc);color:var(--onacc);border:0;border-radius:12px;padding:10px 16px;font-weight:600;cursor:pointer}
+.btn.ghost{background:none;color:var(--ink);border:1.5px solid var(--line)}
+input,select{font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;width:100%}
+.form{display:grid;gap:10px;margin-top:12px}
+.inline{display:flex;gap:8px}
+.clr{width:48px;height:44px;padding:3px;flex:none;cursor:pointer}
+.tt{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.bellb{position:relative;flex:none;border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;width:44px;height:44px;display:grid;place-items:center;cursor:pointer}
+.badge{position:absolute;top:-6px;right:-6px;background:var(--hi);color:#14263B;border-radius:99px;font-size:.75rem;min-width:20px;padding:0 5px;line-height:20px;text-align:center}
+.new{border-left:4px solid var(--hi);padding-left:10px}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.st{background:var(--bg);border-radius:14px;padding:12px;color:var(--mute);font-size:.9rem}
+.st b{display:block;color:var(--ink);font:800 1.7rem "Bricolage Grotesque",sans-serif}
+.big{font:800 3rem/1 "Bricolage Grotesque",sans-serif}
+.chart{display:flex;align-items:flex-end;gap:8px;height:112px}
+.chart>div{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px}
+.chart i{display:block;width:100%;min-height:3px;border-radius:8px 8px 3px 3px}
+.chart small{color:var(--mute);font-size:.72rem}
+.pal{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.pal button{display:flex;align-items:center;gap:8px;border:2px solid var(--line);background:var(--bg);color:var(--ink);border-radius:14px;padding:10px;cursor:pointer;text-align:left;font-weight:600}
+.pal button.on{border-color:var(--acc)}
+.sw{width:22px;height:22px;border-radius:50%;flex:none}
+.hc{position:relative}
+.hc>h2{padding-right:34px}
+.hc>.chip{padding-right:44px}
+.hq{position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:50%;border:1.5px solid var(--mute);background:none;color:var(--mute);font:700 .8rem/1 Figtree,system-ui,sans-serif;cursor:pointer;display:grid;place-items:center;padding:0}
+.hq::after{content:"";position:absolute;inset:-10px}
+.hq[aria-expanded="true"]{background:var(--acc);color:var(--onacc);border-color:var(--acc)}
+.hint{background:var(--bg);border-left:4px solid var(--hi);border-radius:12px;padding:10px 12px;margin:6px 0 10px;font-size:.92rem}
+.av{display:inline-grid;place-items:center;border-radius:50%;flex:none;line-height:1;color:#fff;font-weight:800;text-shadow:0 1px 2px rgba(0,0,0,.35);vertical-align:middle}
+button.avb{position:relative;border:0;background:none;padding:0;cursor:pointer;flex:none}
+.avb .ed{position:absolute;right:-4px;bottom:-4px;width:22px;height:22px;border-radius:50%;background:var(--acc);color:var(--onacc);font-size:.7rem;display:grid;place-items:center;border:2px solid var(--card)}
+.avg{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:8px}
+.avg button{border:2px solid var(--line);background:var(--bg);border-radius:14px;font-size:1.7rem;padding:6px 0;cursor:pointer;line-height:1.2}
+.avg button.on{border-color:var(--acc);background:var(--card)}
+.bgs{display:flex;gap:10px;flex-wrap:wrap;padding:3px}
+.bgs button{width:34px;height:34px;border-radius:50%;border:3px solid var(--card);box-shadow:0 0 0 2px var(--line);cursor:pointer;padding:0}
+.bgs button.on{box-shadow:0 0 0 3px var(--acc)}
+.bdg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.bd{background:var(--bg);border-radius:14px;padding:10px 4px;text-align:center;font-size:.8rem;line-height:1.2;font-weight:600;color:var(--mute)}
+.bd b{display:block;font-size:1.9rem;line-height:1.15;margin-bottom:2px}
+.bd small{display:block;font-weight:400;font-size:.7rem;margin-top:2px}
+.bd.on{color:var(--ink);box-shadow:inset 0 0 0 2px var(--hi)}
+.bd.off b{filter:grayscale(1);opacity:.3}
+.pod{display:flex;align-items:flex-end;justify-content:center;gap:8px;margin:10px 0 6px}
+.pod>div{flex:1;text-align:center;font-size:.85rem;font-weight:600;min-width:0}
+.pod .blk{border-radius:10px 10px 4px 4px;margin-top:6px;display:grid;place-items:center;font:800 1.15rem "Bricolage Grotesque",sans-serif;color:#14263B}
+.tg{font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin:14px 0 2px}
+.lnk{color:var(--ink);font-weight:600;font-size:.85rem;margin-right:12px;text-decoration:underline}
+.week{display:grid;grid-template-columns:auto repeat(7,1fr) auto;gap:4px;align-items:center}
+.wd{border:0;background:none;border-radius:14px;padding:8px 0;text-align:center;cursor:pointer;line-height:1.2}
+.wd small{display:block;color:var(--mute);text-transform:capitalize}
+.wd b{font-family:"Bricolage Grotesque",sans-serif;font-size:1.15rem}
+.wd.on{background:var(--acc);color:var(--onacc)}
+.wd.on small{color:var(--onacc)}
+.wd .pip{display:block;height:5px;width:5px;border-radius:50%;margin:2px auto 0;background:var(--hi)}
+.bar{height:10px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px}
+.lb{display:grid;grid-template-columns:64px 1fr 34px;gap:10px;align-items:center;margin:8px 0}
+.meal{padding:10px 0;border-top:1px solid var(--line)}
+.meal:first-of-type{border-top:0}
+.meal .inline{margin-top:6px}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))}
+nav div{display:flex;width:100%;max-width:640px}
+nav button{flex:1;border:0;background:none;padding:12px 0;font-weight:600;font-size:.78rem;color:var(--mute);cursor:pointer;border-radius:12px}
+#call{position:fixed;inset:0;z-index:20;display:none;flex-direction:column;gap:12px;background:rgba(10,18,28,.94);color:#fff;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
+#call.on{display:flex}
+#call video{width:100%;flex:1;min-height:0;border-radius:16px;background:#000;object-fit:cover}
+#call #lv{flex:none;width:96px;height:128px;align-self:flex-end}
+nav button.on{color:var(--ink);box-shadow:inset 0 -3px 0 var(--hi)}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(86px + env(safe-area-inset-bottom,0px));background:var(--acc);color:var(--onacc);padding:10px 16px;border-radius:12px;font-weight:600;display:none}
+@media (prefers-reduced-motion:no-preference){.chip,.btn,.ck{transition:background .15s,transform .1s}.btn:active,.ck:active{transform:scale(.94)}}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<nav><div id="nav"></div></nav>
+<div id="toast" role="status"></div>
+<div id="call"></div>
+<script src="net.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const iso=d=>{const z=new Date(d.getTime()-d.getTimezoneOffset()*6e4);return z.toISOString().slice(0,10)};
+const add=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const D=s=>new Date(s+"T12:00");
+const today=new Date();today.setHours(12,0,0,0);
+const T=iso(today);
+const M0=[{id:"m",n:"Mama",c:"#E4572E"},{id:"p",n:"Papa",c:"#2E86AB"},{id:"s",n:"Sam",c:"#3E9B4F"},{id:"o",n:"Noor",c:"#9B5DE5"}];
+let M=M0;
+const mem=id=>M.find(m=>m.id===id)||{n:"Onbekend",c:"#888888"};
+const seed=()=>({
+ ev:[{id:1,t:"Zwemles Sam",d:T,h:"16:30",w:["s","p"]},{id:2,t:"Ouderavond",d:iso(add(today,1)),h:"19:30",w:["m","p"]},{id:3,t:"Tandarts Noor",d:iso(add(today,2)),h:"09:15",w:["o","m"]},{id:4,t:"Verjaardag oma",d:iso(add(today,4)),h:"14:00",w:["m","p","s","o"]}],
+ li:{Boodschappen:[{t:"Melk",x:0},{t:"Brood",x:0},{t:"Appels",x:1}],Klusjes:[{t:"Lamp ophangen",x:0}]},
+ ch:[{id:1,t:"Vaatwasser uitruimen",w:"s",p:2,x:0},{id:2,t:"Kamer opruimen",w:"o",p:3,x:0},{id:3,t:"Afval buiten zetten",w:"p",p:1,x:0},{id:4,t:"Was opvouwen",w:"m",p:2,x:1}],
+ me:{[T]:{n:"Pasta pesto",g:"pasta, pesto, parmezaan"}}
+});
+let S;
+if(!S)S=seed();
+M=S.mb=S.mb||M0.map(m=>({...m}));
+S.nt=S.nt||[];
+if(!S.lg)S.lg=S.ch.filter(c=>c.x).map(c=>({id:'c'+c.id,c:c.id,w:c.w,p:c.p,t:c.t,ts:Date.now()}));
+S.ct=S.ct||[];S.wl=S.wl||[];
+const ST0=[{id:'s1',t:'Vaatwasser uitruimen',p:2},{id:'s2',t:'Kamer opruimen',p:3},{id:'s3',t:'Afval buiten zetten',p:1},{id:'s4',t:'Tafel dekken',p:1},{id:'s5',t:'Was opvouwen',p:2}];
+S.st=S.st||ST0.map(x=>({...x}));
+const ROL={b:'Beheerder',o:'Ouder',k:'Kind',a:'Gast: agenda',v:'Gast: kijken'};
+const fixR=()=>M.forEach((m,i)=>{if(!m.r)m.r=i<2?'b':'k'});fixR();
+const RW0=[{id:'r1',t:'Uitje naar de speeltuin',c:20},{id:'r2',t:'Filmavond kiezen',c:15},{id:'r3',t:'Extra schermtijd',c:10}];
+const gen=()=>Math.random().toString(36).slice(2,8).toUpperCase();
+const fixS=()=>{S.st=S.st||ST0.map(x=>({...x}));S.rw=S.rw||RW0.map(x=>({...x}));S.rq=S.rq||[];S.bg=S.bg||{};S.ic=S.ic||''};fixS();
+const ric=async()=>S.ic||'';
+const hp=t=>{let h=5381;for(const c of 'gp'+t)h=((h<<5)+h+c.charCodeAt(0))|0;return String(h)};
+const MUT='addev delev addli tli clrli tch addch newweek wladd wldel ctadd ctdel addmb delmb tolist usest savest delst rqnew rqok rqno rwadd rwdel setpin bgset bgtx bgpay newcode avset avbg'.split(' ');
+const cur=()=>M.find(m=>m.id===ME);
+const isB=()=>{const x=cur();return (!!x&&x.r==='b')||!M.some(m=>m.r==='b')};
+const isP=()=>{const x=cur();return !x||x.r==='b'||x.r==='o'};
+const save=()=>{sync()};
+const U={v:"vandaag",f:"all",d:T,l:"Boodschappen",nl:"",nf:{t:"",h:"",w:[]},nc:{t:"",w:"s",p:"2"},nm:{n:"",c:"#F28C28",r:"k"},nct:{n:'',r:'Klasgenoot',t:''},nw:{t:'',d:''},o:{},ns:{w:null},jc:'',pp:{},pn:{id:null,v:''},bt:{m:null,d:'',a:''},nr:{t:'',c:'10'}};try{U.jc=(location.hash||'').slice(1).toUpperCase().replace(/[^A-Z0-9]/g,'')}catch(e){}
+const okW=w=>U.f==="all"||(Array.isArray(w)?w.includes(U.f):w===U.f);
+const dots=w=>w.map(i=>`<i class="dot" style="background:${mem(i).c}"></i>`).join("");
+const dn=d=>D(d).toLocaleDateString("nl-NL",{weekday:"long",day:"numeric",month:"long"});
+const monday=d=>{const x=D(d);x.setDate(x.getDate()-((x.getDay()+6)%7));return x};
+const evs=d=>S.ev.filter(e=>e.d===d&&okW(e.w)).sort((a,b)=>(a.h||"").localeCompare(b.h||""));
+const evRow=e=>`<div class="row"><div class="time">${e.h||"Hele dag"}</div><div class="grow"><b>${esc(e.t)}</b><div class="dots">${dots(e.w)}${cn(e.c)?`<span class="mute">met ${esc(cn(e.c))}</span>`:""}</div>${shareHtml(e)}</div><button class="x" data-a="delev" data-v="${e.id}" aria-label="Verwijder ${esc(e.t)}">×</button></div>`;
+const chRow=c=>`<div class="row"><button class="ck ${c.x?"on":""}" data-a="tch" data-v="${c.id}" aria-label="Afvinken"></button><div class="grow ${c.x?"done":""}"><b>${esc(c.t)}</b><div class="dots">${dots([c.w])}<span class="mute">${mem(c.w).n}</span></div></div><span class="pts">${c.p} pt</span></div>`;
+
+function note(k,t){
+ S.nt.unshift({id:Date.now()+Math.random(),k,t,ts:Date.now(),r:0});S.nt=S.nt.slice(0,50);save();
+ try{if("Notification" in window&&Notification.permission==="granted")new Notification("Gezinsplanner",{body:t})}catch(e){}
+}
+function bell(){
+ const n=S.nt.filter(x=>!x.r).length;
+ return `<button class="bellb" data-a="tab" data-v="meldingen" aria-label="Meldingen, ${n} nieuw"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0-6 6v4l-2 3h16l-2-3V9a6 6 0 0 0-6-6zM10 19a2 2 0 0 0 4 0"/></svg>${n?`<b class="badge">${n}</b>`:""}</button>`;
+}
+function head(title,sub){
+ return `<div class="top"><div class="tt"><h1>${title}</h1>${bell()}</div>${sub?`<p class="sub">${sub}</p>`:""}</div>
+ <div class="chips" role="group" aria-label="Filter op gezinslid"><button class="chip ${U.f==="all"?"on":""}" data-a="flt" data-v="all">Iedereen</button>${M.map(m=>`<button class="chip ${U.f===m.id?"on":""}" data-a="flt" data-v="${m.id}"><i class="dot" style="background:${m.c};margin:0"></i>${m.n}</button>`).join("")}</div>`;
+}
+
+function vVandaag(){
+ const h=new Date().getHours(),g=h<12?"Goedemorgen":h<18?"Goedemiddag":"Goedenavond";
+ const e=evs(T),c=S.ch.filter(c=>!c.x&&okW(c.w)).slice(0,4),m=S.me[T],b=S.li.Boodschappen.filter(i=>!i.x).length;
+ return head(g,dn(T))+`
+ <div class="card hc"><h2>Vandaag op de agenda</h2>${hq("v_agenda")}${e.length?e.map(evRow).join(""):`<div class="empty">Niets gepland. Plan iets in via Agenda.</div>`}</div>
+ <div class="card hc"><h2>Nog te doen</h2>${hq("v_taken")}${c.length?c.map(chRow).join(""):`<div class="empty">Alle taken zijn gedaan.</div>`}</div>
+ <div class="card hc"><h2>Vanavond eten</h2>${hq("v_eten")}${m&&m.n?`<b>${esc(m.n)}</b>`:`<div class="empty">Nog niets gekozen.</div>`}<div class="inline" style="margin-top:10px"><button class="btn ghost" data-a="tab" data-v="eten">Naar weekmenu</button><button class="btn ghost" data-a="tab" data-v="lijsten">${b} op boodschappenlijst</button></div></div>`;
+}
+
+function vAgenda(){
+ const mo=monday(U.d),days=[0,1,2,3,4,5,6].map(i=>add(mo,i));
+ const strip=days.map(d=>{const id=iso(d);return `<button class="wd ${id===U.d?"on":""}" data-a="day" data-v="${id}"><small>${d.toLocaleDateString("nl-NL",{weekday:"short"})}</small><b>${d.getDate()}</b>${evs(id).length?'<i class="pip"></i>':'<i class="pip" style="background:none"></i>'}</button>`}).join("");
+ const e=evs(U.d);
+ return head("Agenda",dn(U.d))+`
+ <div class="card"><div class="week"><button class="x" data-a="wk" data-v="-7" aria-label="Vorige week">‹</button>${strip}<button class="x" data-a="wk" data-v="7" aria-label="Volgende week">›</button></div></div>
+ <div class="card"><h2>${U.d===T?"Vandaag":"Deze dag"}</h2>${e.length?e.map(evRow).join(""):`<div class="empty">Geen afspraken. Voeg er hieronder een toe.</div>`}</div>
+ <div class="card hc"><h2>Nieuwe afspraak</h2>${hq("a_nieuw")}<div class="form">
+  <input data-k="nf.t" placeholder="Wat staat er op de planning?" value="${esc(U.nf.t)}" aria-label="Titel">
+  <input data-k="nf.h" type="time" value="${U.nf.h}" aria-label="Tijd">
+  <div class="chips" style="padding:0">${M.map(m=>`<button class="chip ${U.nf.w.includes(m.id)?"on":""}" data-a="nfw" data-v="${m.id}"><i class="dot" style="background:${m.c};margin:0"></i>${m.n}</button>`).join("")}</div>
+  ${S.ct.length?`<p class="mute" style="margin:0">Met wie buiten het gezin?</p><div class="chips" style="padding:0">${S.ct.map(c=>`<button class="chip ${(U.nf.c||[]).includes(c.id)?"on":""}" data-a="nfc" data-v="${c.id}">${esc(c.n)}</button>`).join("")}</div>`:""}<button class="btn" data-a="addev">Plan in</button></div></div>`;
+}
+
+U.hp={};U.o.trof=true;U.sp='w';
+U.au={m:U.jc?'join':'login',f:U.jc||'',g:'',n:'',p:'',c:'#F28C28',b:0};U.pw={o:'',n:'',d:''};
+let HLP=true;try{HLP=localStorage.getItem('gp_help')!=='0'}catch(e){}
+/* uitleg per onderdeel: [titel, tekst, groep] */
+const HELP={
+ w_start:["Kies je naam","Tik op je eigen naam om te beginnen. Je hebt geen wachtwoord nodig, tenzij een beheerder een pincode voor je heeft ingesteld.","Beginnen"],
+ w_join:["Sta je er nog niet bij?","Typ je naam, kies een kleur en vul de uitnodigingscode in die je van een beheerder kreeg. Daarna sta je in het gezin.","Beginnen"],
+ install:["App op je telefoon zetten","Android (Chrome): tik op de drie puntjes en kies App installeren of Toevoegen aan startscherm. iPhone (Safari): tik op het deel-icoon en kies Zet op beginscherm. Daarna open je de planner als een gewone app.","Beginnen"],
+ v_agenda:["Vandaag op de agenda","Alle afspraken van vandaag op een rij. Nieuwe afspraken plan je in bij Agenda. Met de naamknoppen bovenaan filter je op een gezinslid.","Vandaag"],
+ v_taken:["Nog te doen","De taken die nog open staan. Vink een taak af als hij klaar is: dat levert punten op voor degene die hem deed.","Vandaag"],
+ v_eten:["Vanavond eten","Wat er vanavond op tafel komt. Je kiest het eten bij Thuis, onder Eten. De ingrediënten kun je met een tik op de boodschappenlijst zetten.","Vandaag"],
+ a_nieuw:["Nieuwe afspraak","Kies eerst een dag in de weekbalk. Vul een titel en eventueel een tijd in, kies wie er meegaat en tik op Plan in. Heb je contacten toegevoegd, dan kun je ook kiezen met wie je buiten het gezin afspreekt en ze een bericht sturen.","Agenda"],
+ lijsten:["Lijsten","Twee lijsten: Boodschappen en Klusjes. Typ iets in om toe te voegen, vink af wat klaar is en wis alle afgevinkte items in een keer.","Thuis"],
+ taken:["Taken","Ouders en beheerders maken taken en kiezen wie ze doet. Iedereen vinkt zijn eigen taken af en verdient daarmee punten. Taken die vaak terugkomen kun je opslaan en opnieuw gebruiken. Aan het begin van de week zet je alle taken weer open.","Thuis"],
+ eten:["Eten","Het weekmenu: kies per dag wat er gegeten wordt en schrijf de ingrediënten op. Met een tik zet je die op de boodschappenlijst.","Thuis"],
+ rw:["Beloningen","Spaar punten met taken en vraag een beloning aan, bijvoorbeeld een uitje. Een ouder keurt de aanvraag goed of af.","Thuis"],
+ bg:["Budget","Alleen voor ouders: houd het zakgeld of weekgeld van elk gezinslid bij, boek uitgaven en bijschrijvingen en betaal het weekgeld uit.","Thuis"],
+ p_avatar:["Profielfoto","Tik op je plaatje bovenaan Profiel en kies een mens of een dier, en een achtergrondkleur. Iedereen ziet jouw plaatje in de planner.","Profiel"],
+ p_punten:["Punten en status","Elke afgevinkte taak levert punten op. Per 25 punten ga je een niveau omhoog en krijg je een nieuwe status: Nieuweling, Helper, Held, Kampioen en Legende.","Profiel"],
+ p_week:["Laatste 7 dagen","Het staafdiagram laat per dag zien hoeveel punten er zijn verdiend.","Profiel"],
+ p_chal:["Weekuitdaging","Elke week is er een nieuwe uitdaging voor het hele gezin, bijvoorbeeld een aantal punten of taken halen. Haal je hem, dan win je een trofee. Op maandag begint een nieuwe.","Profiel"],
+ trof:["Trofeeën","Badges verdien je vanzelf door taken te doen: voor je eerste taak, voor veel punten, voor dagen op rij en meer. Nog niet verdiende badges zijn grijs. Zo zie je meteen waar je naartoe werkt.","Profiel"],
+ p_score:["Scorebord","Wie staat bovenaan? Kies deze week, deze maand of totaal. De top drie staat op het podium.","Profiel"],
+ p_wens:["Verlanglijst","Schrijf op wat je graag zou willen hebben, met een beschrijving zoals maat, kleur of een link. Zo weet de familie wat een goed cadeau is.","Profiel"],
+ pc:["Contacten","Klasgenoten, neefjes, vriendjes en andere mensen buiten het gezin. Voeg een naam en eventueel een telefoonnummer toe. Bij Plan afspraak koppel je een contact aan de agenda en stuur je een bericht via WhatsApp of SMS.","Profiel"],
+ p_inst:["Instellingen","Kies een kleurenpalet en of de app licht, donker of automatisch is. Hier zet je ook de uitleg met de vraagtekens aan of uit. Dit geldt alleen voor jouw toestel.","Profiel"],
+ g_invite:["Familie uitnodigen","Maak een uitnodigingscode en deel die via WhatsApp. Nieuwe gezinsleden kiezen bij Meedoen hun eigen naam en code. Daarna kun je hun rol aanpassen.","Gezin"],
+ pin:["Pincodes","Met een pincode kan alleen die persoon op zijn of haar naam tikken. Leeg opslaan haalt de pincode weg.","Gezin"],
+ b_wibel:["Bellen met Wibel","Wibel is een aparte bel-app voor het gezin. Open hem, kies een gezinslid en bel. Een beheerder kan de link naar Wibel aanpassen.","Bellen"],
+ proef:["Bellen in de planner","Bellen rechtstreeks tussen toestellen in de planner. Dit werkt als de ander ook online is in de planner. Anders gebruik je Wibel.","Bellen"]
+};
+const hq=k=>{if(!HLP||!HELP[k])return"";const on=!!U.hp[k];return `<button class="hq" data-a="help" data-v="${k}" aria-expanded="${on}" aria-label="Uitleg: ${HELP[k][0]}">?</button>${on?`<div class="hint">${HELP[k][1]}</div>`:""}`};
+/* =====================================================================
+   PRIVACY & DISCLAIMER - hier pas je de teksten later aan.
+   - v en d: versienummer en datum (worden bovenaan getoond)
+   - contact: vul je e-mailadres in zodra je dat wilt tonen (leeg = niet getoond)
+   - s: lijst met [titel, tekst]. Voeg toe, verwijder of herschrijf naar wens.
+   TODO vooraf aan publicatie in een app-winkel: controleer de teksten (liefst
+   juridisch), zet ze ook op een openbare webpagina en vul contact in.
+   ===================================================================== */
+const LEGAL={v:'1.1',d:'28 oktober 2026',contact:'',s:[
+ ["Waarvoor is de planner?","De Gezinsplanner is bedoeld voor persoonlijk gebruik binnen een gezin: agenda, taken, lijsten, weekmenu, punten en meer. Het is geen professioneel advies en geen vervanging van officiële agenda's, noodnummers of afspraken met zorgverleners en scholen."],
+ ["Welke gegevens staan erin?","Alles wat jij of je gezin zelf invult: namen, kleuren, profielfoto, rollen, afspraken, taken en punten, boodschappen en klusjes, weekmenu, verlanglijsten, contacten (naam, relatie en eventueel een telefoonnummer) en, als je die functie gebruikt, weekgeld en uitgaven. Vul geen gevoelige gegevens in, zoals BSN, medische gegevens, bankgegevens of wachtwoorden."],
+ ["Waar worden gegevens opgeslagen?","Op de server van de planner. Wie die server beheert, bepaalt waar hij staat; vraag dat aan de beheerder van jullie installatie. Zo ziet iedereen in het gezin hetzelfde. Alleen mensen met een account in jullie gezin kunnen de gegevens zien, maar de beheerder van de server kan er technisch bij: de gegevens zijn niet end-to-end versleuteld. Deel de uitnodigingscode alleen met mensen die je vertrouwt."],
+ ["Wat gebeurt er verder met gegevens?","De planner toont geen advertenties en verkoopt geen gegevens. Er is geen eigen volgsysteem of statistiek ingebouwd. De lettertypen worden geladen via Google Fonts; daarbij ontvangt Google technische gegevens zoals je IP-adres. Als je op WhatsApp, SMS of Wibel tikt, ga je naar die diensten en gelden hun eigen voorwaarden en privacyregels."],
+ ["Accounts en inloggen","Je logt in met de gezinscode, je accountnaam en je eigen code. Codes worden niet leesbaar opgeslagen. Na meerdere foute pogingen wordt inloggen tijdelijk geblokkeerd. De server controleert je rol: wat jouw rol niet mag, wordt niet opgeslagen. Gebruik een code die je nergens anders gebruikt."],
+ ["Kinderen","Ouders en beheerders zijn verantwoordelijk voor de gegevens van hun kinderen in de planner en voor wie er toegang toe heeft. Plaats geen foto's of gegevens van anderen zonder toestemming; bij contacten zoals klasgenoten en neefjes hoort dat bij de ouder."],
+ ["Meldingen, camera en microfoon","Meldingen en bellen vragen eerst om toestemming op je toestel. Je kunt die altijd intrekken in de instellingen van je toestel. Bellen in de planner is een proefversie: beeld en geluid gaan rechtstreeks tussen toestellen, of via een doorgeefserver als dat nodig is. De planner-server geeft alleen de verbindingsberichten door."],
+ ["Je rechten","Je kunt gegevens zelf aanpassen of verwijderen in de planner: gezinsleden, contacten, afspraken, lijsten en wensen. Wil je dat alles wordt gewist of heb je een vraag over je gegevens, neem dan contact op via de contactgegevens onderaan, als die er staan."],
+ ["Disclaimer","De planner wordt geleverd zoals hij is, zonder garantie op beschikbaarheid, juistheid of het bewaren van gegevens. Meldingen en herinneringen kunnen uitblijven, bijvoorbeeld door instellingen van je toestel. Het budget is alleen een handig overzicht en geen bankapp of financieel advies. Maak zelf een kopie van belangrijke afspraken. Gebruik is op eigen risico, voor zover de wet dat toestaat."],
+ ["Wijzigingen","Deze tekst kan veranderen als de planner verandert. Bovenaan staat de versie en de datum van de laatste wijziging."]
+]};
+const legalHtml=()=>`<p class="mute" style="margin:0">Versie ${LEGAL.v} · bijgewerkt ${LEGAL.d}</p>`+LEGAL.s.map(([t,x])=>`<div class="tg">${t}</div><div style="font-size:.92rem">${x}</div>`).join("")+(LEGAL.contact?`<div class="tg">Contact</div><div style="font-size:.92rem">${esc(LEGAL.contact)}</div>`:"");
+const tutHtml=()=>{let g="";return `<p class="mute" style="margin:0 0 4px">Tik op een onderdeel voor uitleg over hoe het werkt.</p>`+Object.keys(HELP).map(k=>{const h=HELP[k],o=!!U.o["tu_"+k],hd=h[2]!==g?`<div class="tg">${h[2]}</div>`:"";g=h[2];return hd+`<div class="row" style="display:block"><button class="chip" style="width:100%;justify-content:space-between;border:0;background:none;padding:6px 0" data-a="sec" data-v="tu_${k}" aria-expanded="${o}"><span><b>${h[0]}</b></span><span>${o?"▴":"▾"}</span></button>${o?`<div class="mute" style="padding:2px 0 8px">${h[1]}</div>`:""}</div>`}).join("")};
+const sec=(k,t,info,body,bare)=>{const h=bare?"":hq(k);return `<div class="${bare?"":"card"+(h?" hc":"")}"><button class="chip" style="width:100%;justify-content:space-between" data-a="sec" data-v="${k}" aria-expanded="${!!U.o[k]}"><span><b>${t}</b> <span class="mute">${info}</span></span><span>${U.o[k]?"▴":"▾"}</span></button>${h}${U.o[k]?`<div style="margin-top:12px">${body}</div>`:""}</div>`};
+const nsw=()=>M.some(m=>m.id===U.ns.w)?U.ns.w:M[0].id;
+const mOpts=sel=>M.map(m=>`<option value="${m.id}" ${sel===m.id?"selected":""}>${esc(m.n)}</option>`).join("");
+function bLijsten(){
+ const items=S.li[U.l];
+ return `<div class="chips" style="padding-top:0">${Object.keys(S.li).map(n=>`<button class="chip ${U.l===n?"on":""}" data-a="lst" data-v="${n}">${n}</button>`).join("")}</div>
+ <div class="inline"><input data-k="nl" data-enter="addli" placeholder="Toevoegen aan ${U.l.toLowerCase()}" value="${esc(U.nl)}" aria-label="Nieuw item"><button class="btn" data-a="addli">Voeg toe</button></div>
+ <div style="margin-top:8px">${items.length?items.map((i,n)=>`<div class="row"><button class="ck ${i.x?"on":""}" data-a="tli" data-v="${n}" aria-label="Afvinken"></button><div class="grow ${i.x?"done":""}">${esc(i.t)}</div></div>`).join(""):`<div class="empty">De lijst is leeg.</div>`}</div>
+ ${items.some(i=>i.x)?`<button class="btn ghost" style="margin-top:8px" data-a="clrli">Afgevinkte items verwijderen</button>`:""}`}
+function bTaken(){
+ const tot=M.map(m=>({m,p:sumP(m.id,wkStart())})),mx=Math.max(1,...tot.map(t=>t.p)),list=S.ch.filter(c=>okW(c.w)),P_=isP();
+ const sv=P_?`<p class="mute" style="margin:0 0 8px">Kies wie de taak krijgt en tik op Toevoegen.</p><select data-k="ns.w" aria-label="Wie krijgt de taak?">${mOpts(nsw())}</select><div style="margin-top:6px">${S.st.length?S.st.map(s=>`<div class="row"><div class="grow"><b>${esc(s.t)}</b></div><span class="pts">${s.p} pt</span><button class="btn" data-a="usest" data-v="${s.id}">Toevoegen</button><button class="x" data-a="delst" data-v="${s.id}" aria-label="Verwijder ${esc(s.t)}">×</button></div>`).join(""):`<div class="empty">Nog geen opgeslagen taken. Maak hieronder een taak en tik op Alleen bewaren.</div>`}</div>`:`<div class="empty">Alleen ouders en beheerders kiezen opgeslagen taken.</div>`;
+ return `<h2>Punten deze week</h2>${tot.map(t=>`<div class="lb"><span><i class="dot" style="background:${t.m.c}"></i>${esc(t.m.n)}</span><div class="bar"><i style="width:${t.p/mx*100}%;background:${t.m.c}"></i></div><b>${t.p}</b></div>`).join("")}${P_?`<button class="btn ghost" data-a="newweek">Nieuwe week starten</button>`:""}
+ <h2 style="margin-top:16px">Takenlijst</h2>${list.length?list.map(chRow).join(""):`<div class="empty">Geen taken voor deze persoon.</div>`}
+ <div style="margin-top:14px">${sec("st","Opgeslagen taken",`(${S.st.length})`,sv,1)}</div>
+ ${P_?`<h2 style="margin-top:16px">Nieuwe taak</h2><div class="form" style="margin-top:0"><input data-k="nc.t" placeholder="Wat moet er gebeuren?" value="${esc(U.nc.t)}" aria-label="Taak"><div class="inline"><select data-k="nc.w" aria-label="Wie">${mOpts(U.nc.w)}</select><select data-k="nc.p" aria-label="Punten">${[1,2,3,5].map(p=>`<option ${U.nc.p==p?"selected":""} value="${p}">${p} punt${p>1?"en":""}</option>`).join("")}</select></div><div class="inline"><button class="btn" style="flex:1" data-a="addch">Taak toevoegen</button><button class="btn ghost" style="flex:1" data-a="savest">Alleen bewaren</button></div></div>`:""}`}
+function bEten(){
+ const mo=monday(T);
+ return [0,1,2,3,4,5,6].map(i=>{const d=iso(add(mo,i)),m=S.me[d]||{n:"",g:""};
+ return `<div class="meal"><b style="text-transform:capitalize">${D(d).toLocaleDateString("nl-NL",{weekday:"long",day:"numeric"})}${d===T?" (vandaag)":""}</b>
+ <div class="inline"><input data-meal="${d}" data-f="n" placeholder="Wat eten we?" value="${esc(m.n)}" aria-label="Gerecht"></div>
+ <div class="inline"><input data-meal="${d}" data-f="g" placeholder="Ingrediënten, met komma’s" value="${esc(m.g)}" aria-label="Ingrediënten"><button class="btn ghost" data-a="tolist" data-v="${d}">Op lijstje</button></div></div>`}).join("")}
+const avail=id=>sumP(id)-S.rq.filter(r=>r.w===id&&r.st!=='no').reduce((a,r)=>a+r.c,0);
+const bgv=id=>S.bg[id]||{w:0,a:'',v:'ouders',tx:[]};
+const bgSet=(id,f)=>{const b=S.bg[id]=S.bg[id]||{w:0,a:'',v:'ouders',tx:[]};f(b)};
+const saldo=id=>bgv(id).tx.reduce((a,t)=>a+t.a,0);
+const eur=n=>'€ '+(Math.round(n*100)/100).toFixed(2).replace('.',',');
+const bsel=()=>M.some(m=>m.id===U.bt.m)?U.bt.m:(M.find(m=>m.r==='k')||M[0]).id;
+function bRw(){
+ const x=cur(),P_=isP(),kid=x&&x.r==='k'?x:null,open=S.rq.filter(r=>r.st==='open');
+ const rev=P_&&open.length?`<h2>Te beoordelen</h2>${open.map(r=>`<div class="row"><i class="dot" style="background:${mem(r.w).c}"></i><div class="grow"><b>${esc(r.t)}</b><div class="mute">${esc(mem(r.w).n)} · ${r.c} punten</div></div><button class="btn" data-a="rqok" data-v="${r.id}">Goed</button><button class="btn ghost" data-a="rqno" data-v="${r.id}">Nee</button></div>`).join("")}`:"";
+ const mine=kid?`<p class="mute" style="margin:0 0 6px">Jij hebt ${avail(kid.id)} punten te besteden.</p>`:"";
+ const cat=`<h2 style="margin-top:12px">Beloningen</h2>${mine}${S.rw.length?S.rw.map(w=>`<div class="row"><div class="grow"><b>${esc(w.t)}</b></div><span class="pts">${w.c} pt</span>${kid?`<button class="btn" data-a="rqnew" data-v="${w.id}">Vraag aan</button>`:""}${P_?`<button class="x" data-a="rwdel" data-v="${w.id}" aria-label="Verwijder ${esc(w.t)}">×</button>`:""}</div>`).join(""):`<div class="empty">Nog geen beloningen.</div>`}`;
+ const my=kid?S.rq.filter(r=>r.w===kid.id).slice(-3).reverse().map(r=>`<div class="row"><div class="grow">${esc(r.t)}</div><span class="mute">${r.st==="open"?"wacht op ouder":r.st==="ok"?"goedgekeurd":"afgewezen"}</span></div>`).join(""):"";
+ const add=P_?`<div class="form"><input data-k="nr.t" placeholder="Nieuwe beloning, bv. Dagje dierentuin" value="${esc(U.nr.t)}" aria-label="Beloning"><div class="inline"><select data-k="nr.c" aria-label="Punten">${[5,10,15,20,30,50].map(p=>`<option ${U.nr.c==p?"selected":""} value="${p}">${p} punten</option>`).join("")}</select><button class="btn" data-a="rwadd">Toevoegen</button></div></div>`:"";
+ return rev+cat+my+add}
+function bBg(){
+ const id=bsel(),b=bgv(id);
+ return `<div class="chips" style="padding-top:0">${M.map(m=>`<button class="chip ${id===m.id?"on":""}" data-a="bsel" data-v="${m.id}"><i class="dot" style="background:${m.c};margin:0"></i>${esc(m.n)}</button>`).join("")}</div>
+ <h2>Saldo: ${eur(saldo(id))}</h2>
+ <div class="form" style="margin-top:0"><input type="number" inputmode="decimal" step="0.5" min="0" data-bgid="${id}" data-bgf="w" value="${b.w||""}" placeholder="Weekgeld in euro" aria-label="Weekgeld"><input data-bgid="${id}" data-bgf="a" value="${esc(b.a)}" placeholder="Afspraak, bv. de helft sparen" aria-label="Afspraak"><select data-bgid="${id}" data-bgf="v" aria-label="Wie mag meekijken?">${[["ouders","Alleen ouders zien dit"],["kind","Ouders en het gezinslid zelf"],["gezin","Iedereen ziet saldo en afspraak"]].map(([k,n])=>`<option value="${k}" ${b.v===k?"selected":""}>${n}</option>`).join("")}</select></div>
+ <h2 style="margin-top:14px">Bedrag boeken</h2><div class="form" style="margin-top:0"><input data-k="bt.d" placeholder="Waarvoor?" value="${esc(U.bt.d)}" aria-label="Omschrijving"><input data-k="bt.a" type="number" inputmode="decimal" step="0.01" min="0" placeholder="Bedrag in euro" value="${esc(U.bt.a)}" aria-label="Bedrag"><div class="inline"><button class="btn" style="flex:1" data-a="bgtx" data-v="+">Bijschrijven</button><button class="btn ghost" style="flex:1" data-a="bgtx" data-v="-">Uitgave</button></div>${b.w>0?`<button class="btn ghost" data-a="bgpay">Weekgeld uitbetalen (${eur(b.w)})</button>`:""}</div>
+ <p class="mute" style="margin:10px 0 0">Het gezinslid ziet dit bij Profiel, voor zover jij het toestaat.</p>`}
+const bgCard=id=>{const b=S.bg[id];if(!b)return'';const x=cur(),own=x&&x.id===id,par=isP();if(!(par||(own&&b.v!=='ouders')||b.v==='gezin'))return'';const full=par||own;
+ return `<div class='card'><h2>Budget van ${esc(mem(id).n)}</h2><div class='big' style='margin:6px 0'>${eur(saldo(id))}</div><p class='mute' style='margin:0'>${b.w?`Weekgeld ${eur(b.w)}. `:''}${b.a?esc(b.a):''}</p>${full?b.tx.slice(-5).reverse().map(t=>`<div class='row'><div class='grow'><b>${esc(t.t)}</b><div class='mute'>${new Date(t.ts).toLocaleDateString('nl-NL',{day:'numeric',month:'short'})}</div></div><b>${t.a<0?'−':'+'} ${eur(Math.abs(t.a))}</b></div>`).join(''):''}</div>`};
+function vThuis(){
+ const o=S.li.Boodschappen.filter(i=>!i.x).length,n=S.ch.filter(c=>!c.x).length,m=S.me[T];
+ return head("Thuis",null)+sec("lijsten","Lijsten",`${o} te kopen`,bLijsten())+sec("taken","Taken",`${n} te doen`,bTaken())+sec("eten","Eten",m&&m.n?"vanavond: "+esc(m.n):"weekmenu",bEten())+sec("rw","Beloningen",S.rw.length+" te verdienen",bRw())+(isP()?sec("bg","Budget","instellen per gezinslid",bBg()):"")}
+
+function vMeld(){
+ const lab={agenda:"Agenda",lijst:"Lijst",taak:"Taak"};
+ const html=`<div class="top"><div class="tt"><h1>Meldingen</h1><button class="btn ghost" data-a="tab" data-v="vandaag">Terug</button></div><p class="sub">Wat is er nieuw in de planner?</p></div>
+ <div class="card">${S.nt.length?S.nt.map(x=>`<div class="row"><div class="grow ${x.r?"":"new"}"><b>${esc(x.t)}</b><div class="mute">${lab[x.k]||""} · ${new Date(x.ts).toLocaleString("nl-NL",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</div></div></div>`).join(""):`<div class="empty">Nog geen meldingen. Zodra iemand iets toevoegt, zie je het hier.</div>`}</div>
+ <div class="inline" style="margin-top:14px"><button class="btn ghost" data-a="perm">Meldingen op dit toestel aan</button>${S.nt.length?`<button class="btn ghost" data-a="clrnt">Alles wissen</button>`:""}</div>`;
+ if(S.nt.some(x=>!x.r)){S.nt.forEach(x=>x.r=1);save()}return html;
+}
+const APP=(/^https?:/.test(location.protocol)&&!/claude/.test(location.hostname))?location.origin+location.pathname:'https://claude.ai/artifact/GVrogPmJksDQQyHcY9zMEA';
+const pinCard=()=>sec("pin","Inlogcodes",`(${M.filter(m=>m.acc).length} accounts)`,`<p class="mute" style="margin:0 0 6px">Is iemand zijn of haar code vergeten? Typ hier een nieuwe code (minstens 4 tekens) en geef die door. Diegene wordt op alle toestellen uitgelogd.</p>${M.filter(m=>m.acc&&m.id!==ME).map(m=>`<div class="row"><i class="dot" style="background:${m.c}"></i><div class="grow"><b>${esc(m.n)}</b></div><input data-k="pp.${m.id}" type="text" maxlength="72" placeholder="Nieuwe code" style="width:120px;flex:none" value="${esc(U.pp[m.id]||"")}" aria-label="Nieuwe code ${esc(m.n)}" autocomplete="off"><button class="btn ghost" data-a="setpin" data-v="${m.id}">Opslaan</button></div>`).join("")||'<div class="empty">Nog geen andere accounts.</div>'}`);
+const pwCard=()=>{const x=cur();return sec("acc","Mijn account",esc(x?x.n:""),`<p class="mute" style="margin:0 0 6px">Ingelogd als ${esc(x?x.n:"")} (${ROL[x?x.r:"k"]}).</p><div class="form" style="margin-top:0"><input data-k="pw.o" type="password" placeholder="Huidige code" value="${esc(U.pw.o)}" autocomplete="current-password" aria-label="Huidige code"><input data-k="pw.n" type="password" placeholder="Nieuwe code (minstens 4 tekens)" value="${esc(U.pw.n)}" autocomplete="new-password" aria-label="Nieuwe code"><button class="btn ghost" data-a="chpw">Code wijzigen</button>${isB()?`<button class="btn ghost" data-a="export">Gezinsgegevens downloaden</button><input data-k="pw.d" type="password" placeholder="Jouw code, om het gezin te verwijderen" value="${esc(U.pw.d)}" autocomplete="current-password" aria-label="Code ter bevestiging"><button class="btn ghost" style="color:#C4374A" data-a="delfam">Gezin definitief verwijderen</button>`:""}</div>`)};
+const inviteCard=()=>{const c=S.ic,tx=encodeURIComponent(`Doe mee met onze Gezinsplanner! Open ${APP}#${c} en gebruik de code ${c}.`);return `<div class="card hc"><h2>Familie uitnodigen</h2>${hq("g_invite")}${c?`<div class="big" style="font-size:2rem;letter-spacing:.1em;margin:6px 0">${esc(c)}</div>`:""}<p class="mute" style="margin:0 0 10px">${c?"Stuur de link of de code. Nieuwe gezinsleden kiezen bij Meedoen hun eigen naam en code. Daarna kun je hun rol aanpassen.":"Maak eerst een uitnodigingscode. Daarna kun je die delen."}</p><div class="inline">${c?`<a class="btn" style="text-decoration:none;text-align:center;flex:1" target="_blank" rel="noopener" href="https://wa.me/?text=${tx}">Deel via WhatsApp</a>`:""}<button class="btn ${c?"ghost":""}" style="flex:1" data-a="newcode">${c?"Nieuwe code":"Code maken"}</button></div></div>`};
+const rOpts=sel=>Object.keys(ROL).map(k=>`<option value="${k}" ${sel===k?"selected":""}>${ROL[k]}</option>`).join("");
+function vGezin(){
+ const A=isB();
+ return `<div class="top"><div class="tt"><h1>Gezin</h1><button class="btn ghost" data-a="tab" data-v="profiel">Terug</button></div><p class="sub" style="text-transform:none">${A?"Jij bent beheerder: je kunt gezinsleden en rollen aanpassen.":"Alleen een beheerder kan gezinsleden aanpassen."}</p></div>
+ <div class="card">${M.map(m=>A?`<div class="row"><input type="color" class="clr" data-mb="${m.id}" data-f="c" value="${m.c}" aria-label="Kleur van ${esc(m.n)}"><input data-mb="${m.id}" data-f="n" value="${esc(m.n)}" aria-label="Naam"><select data-mb="${m.id}" data-f="r" style="width:112px;flex:none" aria-label="Rol van ${esc(m.n)}">${rOpts(m.r)}</select><button class="x" data-a="delmb" data-v="${m.id}" aria-label="Verwijder ${esc(m.n)}">×</button></div>`:`<div class="row"><i class="dot" style="background:${m.c}"></i><div class="grow"><b>${esc(m.n)}</b></div><span class="pts">${ROL[m.r]}</span></div>`).join("")}</div>
+ ${A?sec("add","Gezinslid toevoegen","",`<div class="form" style="margin-top:0"><div class="inline"><input type="color" class="clr" data-k="nm.c" value="${U.nm.c}" aria-label="Kleur"><input data-k="nm.n" data-enter="addmb" placeholder="Naam" value="${esc(U.nm.n)}" aria-label="Naam"></div><select data-k="nm.r" aria-label="Rol">${rOpts(U.nm.r)}</select><button class="btn" data-a="addmb">Toevoegen</button></div><p class="mute" style="margin:10px 0 0">Familie hoeft zich niet aan te melden: ze openen de planner en tikken op hun naam.</p>`):""}
+ ${isP()?pinCard():""}${A?inviteCard():""}
+ ${sec("rules","Wat mag wie?","",`
+ <div class="row"><div class="grow"><b>Beheerder</b><div class="mute">Alles: gezinsleden en rollen beheren, taken maken.</div></div></div>
+ <div class="row"><div class="grow"><b>Ouder</b><div class="mute">Taken maken en opgeslagen taken gebruiken, agenda en lijsten.</div></div></div>
+ <div class="row"><div class="grow"><b>Kind</b><div class="mute">Eigen taken afvinken, beloningen aanvragen, agenda en lijsten gebruiken.</div></div></div>
+ <div class="row"><div class="grow"><b>Gast: agenda</b><div class="mute">Voor opa, oma of oppas: ziet alles en kan alleen afspraken plannen.</div></div></div>
+ <div class="row"><div class="grow"><b>Gast: kijken</b><div class="mute">Kan alles bekijken, maar niets aanpassen.</div></div></div>`)}`;
+}
+function vWelkom(){
+ if(BOOT)return `<div class="top"><h1>Even laden…</h1><p class="sub" style="text-transform:none">Je gegevens worden opgehaald.</p></div>`;
+ if(BOOTERR&&NET.token)return `<div class="top"><h1>Geen verbinding</h1><p class="sub" style="text-transform:none">${esc(BOOTERR)}</p></div><div class="card"><div class="form" style="margin-top:0"><button class="btn" data-a="retry">Opnieuw proberen</button><button class="btn ghost" data-a="switch">Uitloggen</button></div></div>`;
+ const A=U.au,m=A.m;
+ const inp=(k,ph,ty,ex)=>`<input data-k="au.${k}" data-enter="auth" type="${ty||"text"}" placeholder="${ph}" value="${esc(A[k])}" aria-label="${ph}" ${ex||""}>`;
+ const tabs=[["login","Inloggen"],["join","Meedoen"],["new","Nieuw gezin"]].map(([k,n])=>`<button class="chip ${m===k?"on":""}" data-a="amode" data-v="${k}">${n}</button>`).join("");
+ const fields=m==="login"?inp("f","Gezinscode","text",'autocapitalize="characters" autocomplete="off"')+inp("n","Jouw naam","text",'autocomplete="username"')+inp("p","Jouw code","password",'autocomplete="current-password"')
+  :m==="join"?inp("f","Uitnodigingscode","text",'autocapitalize="characters" autocomplete="off"')+inp("n","Kies je naam (zo log je later in)","text",'autocomplete="username"')+inp("p","Kies een eigen code (minstens 4 tekens)","password",'autocomplete="new-password"')+`<div class="inline" style="align-items:center"><input type="color" class="clr" data-k="au.c" value="${A.c}" aria-label="Kleur"><span class="mute">Jouw kleur</span></div>`
+  :inp("g","Naam van het gezin","text")+inp("n","Jouw naam","text",'autocomplete="username"')+inp("p","Kies een wachtwoord (minstens 8 tekens)","password",'autocomplete="new-password"');
+ const btn=m==="login"?"Inloggen":m==="join"?"Ik doe mee":"Gezin aanmaken";
+ const sub=m==="new"?"Maak een nieuw gezin aan. Jij wordt de beheerder en krijgt daarna een uitnodigingscode om te delen.":m==="join"?"Heb je een uitnodigingscode gekregen? Maak hier je eigen account.":"Log in met de gezinscode, jouw naam en jouw eigen code.";
+ return `<div class="top"><h1>Welkom</h1><p class="sub" style="text-transform:none">${sub}</p></div>
+ <div class="chips" role="group" aria-label="Kies wat je wilt doen">${tabs}</div>
+ <div class="card"><div class="form" style="margin-top:0">${fields}<button class="btn" data-a="auth"${A.b?" disabled":""}>${btn}</button></div></div>
+ <p class="mute" style="font-size:.85rem;margin:14px 4px 0">Door de planner te gebruiken ga je akkoord met de privacy &amp; disclaimer hieronder.</p>
+ ${sec("legal","Privacy &amp; disclaimer","v"+LEGAL.v,legalHtml())}`}
+const TABS=[["vandaag","Vandaag"],["agenda","Agenda"],["thuis","Thuis"],["bellen","Bellen"],["profiel","Profiel"]];
+const V={vandaag:vVandaag,agenda:vAgenda,thuis:vThuis,gezin:vGezin,meldingen:vMeld,bellen:vBellen,profiel:vProfiel,contacten:vContacten};
+function render(){
+ const w=!NET.token||!cur();if(!w&&cur().r==="a"&&U.v==="thuis")U.v="agenda";$("#app").innerHTML=w?vWelkom():V[U.v]();$("nav").style.display=w?"none":"";if(cur()&&cur().r==="v")document.querySelectorAll("#app input,#app select").forEach(e=>e.disabled=true);
+ $("#nav").innerHTML=w?"":TABS.filter(([k])=>!(cur().r==="a"&&k==="thuis")).map(([k,n])=>`<button class="${U.v===k?"on":""}" data-a="tab" data-v="${k}">${n}</button>`).join("");
+}
+function toast(t){const e=$("#toast");e.textContent=t;e.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display="none",2200)}
+
+function act(a,v){
+ if(MUT.includes(a)){const x=cur();if(x&&(x.r==="v"||(x.r==="a"&&a!=="addev"&&a!=="delev")))return toast("Met jouw rol kun je dit niet aanpassen")}
+ if(a==="tab"){if(v==="lijsten"||v==="taken"||v==="eten"){U.o[v]=1;v="thuis"}U.v=v;scrollTo(0,0)}
+ else if(a==="flt")U.f=v;
+ else if(a==="day")U.d=v;
+ else if(a==="wk")U.d=iso(add(D(U.d),+v));
+ else if(a==="nfw"){const w=U.nf.w,i=w.indexOf(v);i<0?w.push(v):w.splice(i,1)}
+ else if(a==="addev"){if(!U.nf.t.trim())return toast("Geef de afspraak een titel");
+  const t=U.nf.t.trim();S.ev.push({id:Date.now(),t,d:U.d,h:U.nf.h,w:U.nf.w.length?[...U.nf.w]:M.map(m=>m.id),c:[...(U.nf.c||[])]});note("agenda",`Nieuwe afspraak: ${t} (${dn(U.d)}${U.nf.h?" om "+U.nf.h:""})`);U.nf={t:"",h:"",w:[]};save();toast("Ingepland")}
+ else if(a==="delev"){S.ev=S.ev.filter(e=>e.id!=v);save()}
+ else if(a==="lst")U.l=v;
+ else if(a==="addli"){if(!U.nl.trim())return;const t=U.nl.trim();S.li[U.l].push({t,x:0});note("lijst",`${U.l==="Boodschappen"?"Boodschap":"Klus"} toegevoegd: ${t}`);U.nl="";save();render();$("[data-k=nl]").focus();return}
+ else if(a==="tli"){const i=S.li[U.l][v];i.x=i.x?0:1;save()}
+ else if(a==="clrli"){S.li[U.l]=S.li[U.l].filter(i=>!i.x);save()}
+ else if(a==="tch"){const c=S.ch.find(c=>c.id==v);c.x=c.x?0:1;if(c.x){const b0=bdgs(c.w).filter(b=>b.ok).map(b=>b.t);S.lg.push({id:String(Date.now()),c:c.id,w:c.w,p:c.p,t:c.t,ts:Date.now()});const nb=bdgs(c.w).filter(b=>b.ok&&!b0.includes(b.t));toast(`+${c.p} punt${c.p>1?"en":""} voor ${mem(c.w).n}${nb.length?` · ${nb[0].e} ${nb[0].t}!`:""}`)}else{const i=S.lg.map(l=>l.c).lastIndexOf(c.id);if(i>=0)S.lg.splice(i,1)}save()}
+ else if(a==="addch"){if(!isP())return toast("Alleen ouders en beheerders voegen taken toe");if(!U.nc.t.trim())return toast("Geef de taak een naam");
+  const t=U.nc.t.trim();S.ch.push({id:Date.now(),t,w:U.nc.w,p:+U.nc.p,x:0});note("taak",`Nieuwe taak voor ${mem(U.nc.w).n}: ${t}`);U.nc.t="";save();toast("Taak toegevoegd")}
+ else if(a==="newweek"){if(!isP())return;S.ch.forEach(c=>c.x=0);save();toast("Nieuwe week, nieuwe kansen")}
+ else if(a==="pf"){U.pf=v}
+ else if(a==='twl'){U.wo=!U.wo}
+ else if(a==='wladd'){const t=U.nw.t.trim();if(!t)return toast('Geef je wens een titel');S.wl.push({id:'w'+Date.now(),o:v,t,d:U.nw.d.trim()});U.nw={t:'',d:''};save();toast('Toegevoegd aan de verlanglijst')}
+ else if(a==='wldel'){S.wl=S.wl.filter(w=>w.id!==v);save()}
+ else if(a==='ctadd'){const n=U.nct.n.trim();if(!n)return toast('Geef het contact een naam');S.ct.push({id:'k'+Date.now(),n,r:U.nct.r,t:U.nct.t.trim(),o:v});U.nct.n='';U.nct.t='';save();toast(n+' toegevoegd')}
+ else if(a==='ctdel'){S.ct=S.ct.filter(c=>c.id!==v);S.ev.forEach(e=>{if(e.c)e.c=e.c.filter(x=>x!==v)});save()}
+ else if(a==='ctplan'){const c=S.ct.find(c=>c.id===v);if(!c)return;U.nf={t:'Afspraak met '+c.n,h:'',w:c.o?[c.o]:[],c:[v]};U.v='agenda';scrollTo(0,0)}
+ else if(a==='nfc'){U.nf.c=U.nf.c||[];const i=U.nf.c.indexOf(v);i<0?U.nf.c.push(v):U.nf.c.splice(i,1)}
+ else if(a==='pincheck'){return}
+ else if(a==='pincancel'){U.pn={id:null,v:''}}
+ else if(a==='setpin'){if(!isP())return;const x=(U.pp[v]||'').trim();if(x.length<4)return toast('Een code heeft minstens 4 tekens');NET.api('/reset',{mid:v,password:x}).then(()=>{U.pp[v]='';toast('Nieuwe code opgeslagen');render()}).catch(e=>toast(e.message));return}
+ else if(a==='newcode'){if(!isB())return;NET.api('/newcode',{}).then(d=>{S.ic=d.code;toast('Nieuwe code gemaakt');render()}).catch(e=>toast(e.message));return}
+ else if(a==='rqnew'){const w=S.rw.find(r=>r.id===v),x=cur();if(!w||!x||x.r!=='k')return;if(avail(x.id)<w.c)return toast('Je hebt nog niet genoeg punten');S.rq.push({id:'q'+Date.now(),w:x.id,t:w.t,c:w.c,ts:Date.now(),st:'open'});note('taak',`${x.n} vraagt een beloning aan: ${w.t}`);save();toast('Aangevraagd, een ouder beslist')}
+ else if(a==='rqok'||a==='rqno'){if(!isP())return;const r=S.rq.find(q=>q.id===v);if(!r)return;r.st=a==='rqok'?'ok':'no';note('taak',`Beloning ${r.t} voor ${mem(r.w).n}: ${r.st==='ok'?'goedgekeurd':'afgewezen'}`);save()}
+ else if(a==='rwadd'){if(!isP())return;const t=U.nr.t.trim();if(!t)return toast('Geef de beloning een naam');S.rw.push({id:'r'+Date.now(),t,c:+U.nr.c});U.nr.t='';save();toast('Beloning toegevoegd')}
+ else if(a==='rwdel'){if(!isP())return;S.rw=S.rw.filter(r=>r.id!==v);save()}
+ else if(a==='bsel'){U.bt.m=v}
+ else if(a==='bgtx'){if(!isP())return;const id=bsel(),n=parseFloat(String(U.bt.a).replace(',','.'));if(!(n>0))return toast('Typ een bedrag');bgSet(id,b=>b.tx.push({id:'t'+Date.now(),t:U.bt.d.trim()||(v==='+'?'Bijgeschreven':'Uitgave'),a:v==='+'?n:-n,ts:Date.now()}));U.bt.d='';U.bt.a='';save();toast('Opgeslagen')}
+ else if(a==='bgpay'){const id=bsel(),b=bgv(id);if(!isP()||!(b.w>0))return;bgSet(id,x=>x.tx.push({id:'t'+Date.now(),t:'Weekgeld',a:x.w,ts:Date.now()}));save();toast('Weekgeld uitbetaald')}
+ else if(a==='wbsave'){if(!isB())return;const x=(U.wbf.u||'').trim();if(x&&!/^https:\/\//i.test(x))return toast('Het adres moet met https:// beginnen');S.wb=x;U.wbf.u='';save();toast(x?'Wibel-link opgeslagen':'Link gewist')}
+ else if(a==='sec'){U.o[v]=!U.o[v]}
+ else if(a==='join'){return}
+ else if(a==='switch'){NET.logout();ME=null;BOOTERR='';try{localStorage.removeItem('gp_me')}catch(e){}load(seed());U.v='vandaag'}
+ else if(a==='amode'){U.au.m=v;U.au.p=''}
+ else if(a==='auth'){doAuth();return}
+ else if(a==='retry'){BOOTERR='';BOOT=true;render();startSession().catch(e=>{BOOTERR=e.message}).finally(()=>{BOOT=false;render()});return}
+ else if(a==='chpw'){const o=U.pw.o,n=U.pw.n;if(n.length<4)return toast('Kies een code van minstens 4 tekens');NET.api('/password',{old:o,password:n}).then(d=>{NET.setSession(d);U.pw={o:'',n:'',d:''};toast('Je code is gewijzigd');render()}).catch(e=>toast(e.message));return}
+ else if(a==='delfam'){if(!isB())return;NET.api('/delete-family',{password:U.pw.d}).then(()=>{NET.logout();ME=null;load(seed());U.pw={o:'',n:'',d:''};toast('Het gezin is verwijderd');render()}).catch(e=>toast(e.message));return}
+ else if(a==='export'){NET.api('/export').then(d=>{const b=new Blob([JSON.stringify(d,null,1)],{type:'application/json'}),l=document.createElement('a');l.href=URL.createObjectURL(b);l.download='gezinsplanner-export.json';l.click()}).catch(e=>toast(e.message));return}
+ else if(a==='usest'){if(!isP())return;const t=S.st.find(x=>x.id===v);if(!t)return;const w=nsw();S.ch.push({id:Date.now(),t:t.t,w,p:t.p,x:0});note('taak',`Nieuwe taak voor ${mem(w).n}: ${t.t}`);save();toast('Toegevoegd voor '+mem(w).n)}
+ else if(a==='savest'){if(!isP())return;const t=U.nc.t.trim();if(!t)return toast('Geef de taak een naam');S.st.push({id:'s'+Date.now(),t,p:+U.nc.p});U.nc.t='';save();toast('Opgeslagen')}
+ else if(a==='delst'){if(!isP())return;S.st=S.st.filter(x=>x.id!==v);save()}
+ else if(a==='tgs'){U.so=!U.so}
+ else if(a==='avpk'){U.avo=!U.avo}
+ else if(a==='avset'){const x=cur();if(!x)return;x.av=v;save()}
+ else if(a==='avbg'){const x=cur();if(!x)return;x.bg=v;save()}
+ else if(a==='sbp'){U.sp=v}
+ else if(a==='help'){U.hp[v]=!U.hp[v]}
+ else if(a==='hlpset'){HLP=v==='1';U.hp={};try{localStorage.setItem('gp_help',v)}catch(e){}}
+ else if(a==='pal'){PAL=v;try{localStorage.setItem('gp_pal',v)}catch(e){}applyTheme()}
+ else if(a==='mode'){MODE=v;try{localStorage.setItem('gp_mode',v)}catch(e){}applyTheme()}
+ else if(a==="setme"){return}
+ else if(a==="dial"){const[p,vd]=v.split('|');dial(p,vd==='1');return}
+ else if(a==="acc"){accept();return}
+ else if(a==="dec"||a==="hang"){hang(false);return}
+ else if(a==="mute"){const t=ls&&ls.getAudioTracks()[0];if(t){t.enabled=!t.enabled;toast(t.enabled?'Microfoon aan':'Microfoon uit')}return}
+ else if(a==="clrnt"){S.nt=[];save()}
+ else if(a==="perm"){try{Notification.requestPermission().then(p=>toast(p==="granted"?"Meldingen staan aan":"Meldingen zijn geblokkeerd"))}catch(e){toast("Dit toestel ondersteunt dit niet")}return}
+ else if(a==="addmb"){if(!isB())return toast("Alleen een beheerder kan dit");const n=U.nm.n.trim();if(!n)return toast("Geef het gezinslid een naam");M.push({id:"u"+Date.now(),n,c:U.nm.c,r:U.nm.r||"k"});U.nm.n="";save();toast(n+" toegevoegd")}
+ else if(a==="delmb"){if(!isB())return toast("Alleen een beheerder kan dit");if(M.length<2)return toast("Er moet minstens één gezinslid blijven");const i=M.findIndex(m=>m.id===v),naam=M[i].n;if(M[i].r==="b"&&M.filter(x=>x.r==="b").length<2)return toast("Er moet minstens één beheerder blijven");M.splice(i,1);const f=M[0].id;
+  S.ev.forEach(e=>{e.w=e.w.filter(x=>x!==v);if(!e.w.length)e.w=[f]});S.ch.forEach(c=>{if(c.w===v)c.w=f});
+  if(U.f===v)U.f="all";if(U.nc.w===v)U.nc.w=f;U.nf.w=U.nf.w.filter(x=>x!==v);save();toast(naam+" verwijderd")}
+ else if(a==="tolist"){const g=(S.me[v]&&S.me[v].g||"").split(",").map(s=>s.trim()).filter(Boolean),L=S.li.Boodschappen;
+  const nieuw=g.filter(x=>!L.some(i=>i.t.toLowerCase()===x.toLowerCase()));nieuw.forEach(x=>L.push({t:x[0].toUpperCase()+x.slice(1),x:0}));if(nieuw.length)note("lijst",`${nieuw.length} boodschappen toegevoegd vanuit het weekmenu`);save();
+  return toast(nieuw.length?`${nieuw.length} toegevoegd aan Boodschappen`:"Niets nieuws om toe te voegen")}
+ render();
+}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(b)act(b.dataset.a,b.dataset.v)});
+document.addEventListener("input",e=>{const t=e.target;
+ if(t.dataset.bgf){if(isP()){bgSet(t.dataset.bgid,b=>{b[t.dataset.bgf]=t.dataset.bgf==="w"?(+t.value||0):t.value});save()}return}
+ if(t.dataset.mb){const m=M.find(x=>x.id===t.dataset.mb);if(m){m[t.dataset.f]=t.value;save()}return}
+ if(t.dataset.meal){const d=t.dataset.meal;S.me[d]=S.me[d]||{n:"",g:""};S.me[d][t.dataset.f]=t.value;save();return}
+ const k=t.dataset.k;if(!k)return;
+ if(k==="nl")U.nl=t.value;else{const[o,p]=k.split(".");U[o][p]=t.value}});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset.enter)act(e.target.dataset.enter)});
+/* ---- delen tussen telefoons (db) ---- */
+let st=null;
+function sync(){if(!NET.token)return;clearTimeout(st);st=setTimeout(()=>{NET.put(S).catch(e=>toast(e.message))},400)}
+function load(n){S=n;M=S.mb=S.mb||[];S.nt=S.nt||[];S.lg=S.lg||[];S.ct=S.ct||[];S.wl=S.wl||[];fixR();fixS();if(!S.li[U.l])U.l='Boodschappen'}
+function adopt(n,forced){
+ const old=new Set(S.nt.map(x=>x.id)),fresh=(n.nt||[]).filter(x=>!old.has(x.id)&&!x.r);
+ load(n);if(forced)toast('Een deel van je wijziging mag niet met jouw rol en is teruggezet.');
+ fresh.slice(0,3).forEach(x=>{toast(x.t);try{if(Notification.permission==='granted')new Notification('Gezinsplanner',{body:x.t})}catch(e){}});
+ if(!/INPUT|SELECT/.test(document.activeElement.tagName))render()}
+
+/* ---- bellen (room + WebRTC) ---- */
+const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
+let R=null,pc=null,ls=null,rs=null,ring=null,buf={},ME=null;
+try{ME=localStorage.getItem('gp_me')}catch(e){}
+const myPeer=()=>{const p=R&&R.peers().find(p=>p.sameTab);return p&&p.peer};
+const nm=peer=>{const p=R&&R.peers().find(p=>p.peer===peer);return p&&p.presence.mid?mem(p.presence.mid).n:'Een gezinslid'};
+const tx=(to,o)=>{const s=JSON.stringify(o),id=Math.random().toString(36).slice(2,8),n=Math.ceil(s.length/2400);for(let i=0;i<n;i++)R.emit('call',{to,id,i,n,p:s.slice(i*2400,(i+1)*2400)}).catch(()=>toast('Bellen mag niet met jouw toegang. Vraag de eigenaar om meer rechten.'))};
+function onSig(m){
+ const d=m.data;if(m.sameTab||!d||d.to!==myPeer())return;
+ const b=buf[d.id]=buf[d.id]||{n:d.n,p:[]};b.p[d.i]=d.p;if(b.p.filter(x=>x!=null).length<b.n)return;delete buf[d.id];
+ let o;try{o=JSON.parse(b.p.join(''))}catch(e){return}
+ if(o.t==='offer'){if(pc||ring)return tx(m.peer,{t:'end'});ring={peer:m.peer,o};ui();try{navigator.vibrate&&navigator.vibrate([300,150,300]);if(Notification.permission==='granted')new Notification('Gezinsplanner',{body:nm(m.peer)+' belt je'})}catch(e){}}
+ else if(o.t==='answer'){if(pc&&pc.peerId===m.peer)pc.setRemoteDescription({type:'answer',sdp:o.sdp}).catch(()=>{})}
+ else if(o.t==='end'){if(ring&&ring.peer===m.peer){ring=null;ui()}else if(pc&&pc.peerId===m.peer){toast('Gesprek beëindigd');hang(true)}}}
+const gather=()=>new Promise(r=>{if(pc.iceGatheringState==='complete')return r();const f=()=>{if(pc.iceGatheringState==='complete'){pc.removeEventListener('icegatheringstatechange',f);r()}};pc.addEventListener('icegatheringstatechange',f);setTimeout(r,3500)});
+async function media(v){try{ls=await navigator.mediaDevices.getUserMedia({audio:true,video:!!v});return true}catch(e){toast('Geen toegang tot microfoon of camera');return false}}
+function mk(peer){
+ pc=new RTCPeerConnection({iceServers:NET.ice||ICE.iceServers});pc.peerId=peer;ls.getTracks().forEach(t=>pc.addTrack(t,ls));
+ pc.ontrack=e=>{rs=e.streams[0];ui('Verbonden')};
+ pc.onconnectionstatechange=()=>{if(pc&&pc.connectionState==='failed'){toast('Verbinding mislukt');hang(false)}}}
+async function dial(peer,video){
+ if(pc||ring)return;if(!ME)return toast('Kies eerst wie je bent');
+ if(!await media(video))return;
+ mk(peer);ui('Bellen…');
+ const o=await pc.createOffer();await pc.setLocalDescription(o);await gather();
+ tx(peer,{t:'offer',sdp:pc.localDescription.sdp,video:!!video})}
+async function accept(){
+ const {peer,o}=ring;if(!await media(o.video)){hang(false);return}
+ ring=null;mk(peer);ui('Verbinden…');
+ await pc.setRemoteDescription({type:'offer',sdp:o.sdp});const a=await pc.createAnswer();await pc.setLocalDescription(a);await gather();
+ tx(peer,{t:'answer',sdp:pc.localDescription.sdp})}
+function hang(remote){
+ if(ring&&!pc){if(!remote)tx(ring.peer,{t:'end'});ring=null}
+ if(pc){if(!remote)tx(pc.peerId,{t:'end'});pc.close();pc=null}
+ if(ls){ls.getTracks().forEach(t=>t.stop());ls=null}
+ rs=null;ui()}
+function ui(s){
+ const c=$('#call');
+ if(ring&&!pc){c.className='on';c.innerHTML=`<h2>${esc(nm(ring.peer))} belt je${ring.o.video?' (video)':''}</h2><div class='inline'><button class='btn' data-a='acc'>Opnemen</button><button class='btn ghost' style='color:#fff' data-a='dec'>Weigeren</button></div>`;return}
+ if(!pc){c.className='';c.innerHTML='';return}
+ c.className='on';
+ c.innerHTML=`<video id='rv' autoplay playsinline></video><video id='lv' autoplay playsinline muted></video><p>${s||'Verbinden…'}</p><div class='inline'><button class='btn ghost' style='color:#fff' data-a='mute'>Microfoon aan/uit</button><button class='btn' data-a='hang'>Ophangen</button></div>`;
+ $('#rv').srcObject=rs;$('#lv').srcObject=ls}
+U.wbf={u:''};
+const wibelCard=()=>{const u=S.wb||'https://wibel.netlify.app';return `<div class='card hc'><h2>Bellen met Wibel</h2>${hq('b_wibel')}<p class='mute' style='margin:0 0 10px'>${u?'Open Wibel, kies een gezinslid en bel. Wibel werkt ook als de planner dicht is.':'Er is nog geen Wibel-link. '+(isB()?'Plak hieronder het webadres van jullie Wibel-app.':'Vraag een beheerder om de link toe te voegen.')}</p>${u?`<a class='btn' style='display:block;text-align:center;text-decoration:none' href='${esc(u)}' target='_blank' rel='noopener'>Open Wibel</a>`:''}${isB()?`<div class='form'><input data-k='wbf.u' type='url' inputmode='url' placeholder='https://… webadres van Wibel' value='${esc(U.wbf.u||u)}' aria-label='Webadres van Wibel'><button class='btn ghost' data-a='wbsave'>${u?'Link wijzigen':'Link opslaan'}</button></div>`:''}</div>`};
+function vBellen(){
+ const ps=R?R.peers().filter(p=>!p.sameTab&&p.kind==='viewer'&&p.presence.mid):[];
+ return `<div class='top'><h1>Bellen</h1><p class='sub' style='text-transform:none'>Bel je gezin met Wibel.</p></div>
+ ${wibelCard()}
+  ${sec('proef','Bellen in de planner (proef)','',`<h2>Nu online</h2>${R?`<p class='mute' style='margin:0 0 6px'>${R.peers().length} ${R.peers().length===1?'toestel':'toestellen'} in de planner${cur()?', jij als '+esc(cur().n):''}.</p>`:''}${!R?`<div class='empty'>Er is geen verbinding met de server. Probeer het zo opnieuw.</div>`:ps.length?ps.map(p=>{const m=mem(p.presence.mid);return `<div class='row'><i class='dot' style='background:${m.c}'></i><div class='grow'><b>${esc(m.n)}</b>${p.isMe?"<div class='mute'>Jouw andere toestel</div>":''}</div><button class='btn ghost' data-a='dial' data-v='${p.peer}|0'>Bel</button><button class='btn' data-a='dial' data-v='${p.peer}|1'>Video</button></div>`}).join(''):`<div class='empty'>Er is nu niemand anders online. De ander moet ingelogd zijn en de planner open hebben.</div>`}`)}`}
+/* ---- profiel & puntenstatistieken ---- */
+const wkStart=()=>{const d=monday(T);d.setHours(0,0,0,0);return d.getTime()};
+const moStart=()=>{const d=new Date(today);d.setDate(1);d.setHours(0,0,0,0);return d.getTime()};
+const sumP=(id,s=0)=>S.lg.filter(l=>l.w===id&&l.ts>=s).reduce((a,l)=>a+l.p,0);
+
+/* ---- profielfoto's ---- */
+const AVP=['👦','👧','👩','👨','👵','👴'],AVA=['🐶','🐱','🦊','🐼','🐸','🦁','🐵','🐰','🐯','🐧'],AVB=['#E4572E','#2E86AB','#3E9B4F','#9B5DE5','#F2B134','#E85D9E','#14A3A3','#6C7A89'];
+const av=(m,px=28)=>`<span class="av" style="width:${px}px;height:${px}px;font-size:${Math.round(px*.55)}px;background:${m.bg||m.c}">${m.av||esc((m.n||'?').trim().charAt(0).toUpperCase())}</span>`;
+const avPicker=()=>{const x=cur(),b=x.bg||x.c,pk=l=>l.map(e=>`<button class="${x.av===e?'on':''}" data-a="avset" data-v="${e}" aria-pressed="${x.av===e}" aria-label="Kies ${e}">${e}</button>`).join('');
+ return `<div style="margin-top:14px"><div class="tg" style="margin-top:0">Mensen</div><div class="avg">${pk(AVP)}</div><div class="tg">Dieren</div><div class="avg">${pk(AVA)}</div><div class="tg">Achtergrond</div><div class="bgs">${AVB.map(c=>`<button class="${b===c?'on':''}" style="background:${c}" data-a="avbg" data-v="${c}" aria-pressed="${b===c}" aria-label="Achtergrond ${c}"></button>`).join('')}</div><div class="inline" style="margin-top:14px"><button class="btn ghost" data-a="avset" data-v="">Alleen mijn letter</button><button class="btn" data-a="avpk">Klaar</button></div></div>`};
+/* ---- status, uitdaging, trofeeën, scorebord ---- */
+const STAT=l=>l>=8?'Legende':l>=5?'Kampioen':l>=3?'Held':l>=2?'Helper':'Nieuweling';
+const CH=[{e:'🎯',t:'Puntenjager',d:'Verdien 15 punten',k:'p',g:15},{e:'🏃',t:'Klusjesmarathon',d:'Doe 5 taken',k:'n',g:5},{e:'📅',t:'Elke dag raak',d:'Doe op 4 verschillende dagen een taak',k:'d',g:4},{e:'🚀',t:'Topweek',d:'Verdien 25 punten',k:'p',g:25}];
+const wkB=k=>{const a=new Date(wkStart());a.setDate(a.getDate()-7*k);const b=new Date(a);b.setDate(b.getDate()+7);return[a.getTime(),b.getTime()]};
+const chOf=a=>CH[Math.floor(a/6048e5)%CH.length];
+const chVal=(id,c,a,b)=>{const L=S.lg.filter(l=>l.w===id&&l.ts>=a&&l.ts<b);return c.k==='p'?L.reduce((t,l)=>t+l.p,0):c.k==='n'?L.length:new Set(L.map(l=>iso(new Date(l.ts)))).size};
+const chWon=id=>{let n=0;for(let k=0;k<12;k++){const[a,b]=wkB(k);if(chVal(id,chOf(a),a,b)>=chOf(a).g)n++}return n};
+const maxStreak=id=>{const ds=[...new Set(S.lg.filter(l=>l.w===id).map(l=>{const d=new Date(l.ts);return Math.floor(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/864e5)}))].sort((a,b)=>a-b);let best=0,run=0,pv=null;ds.forEach(x=>{run=pv!==null&&x===pv+1?run+1:1;pv=x;if(run>best)best=run});return best};
+const bdgs=id=>{const tot=sumP(id),n=S.lg.filter(l=>l.w===id).length,ms=maxStreak(id),lvl=Math.floor(tot/25)+1,lead=M.map(x=>({id:x.id,p:sumP(x.id,wkStart())})).sort((a,b)=>b.p-a.p)[0];
+ return [['🌱','Eerste stap','1 taak gedaan',n>=1],['⭐','Klusjesheld','10 taken gedaan',n>=10],['🏅','Taken-kampioen','25 taken gedaan',n>=25],['💎','Puntenjager','50 punten',tot>=50],['👑','Puntenkoning','100 punten',tot>=100],['🔥','Op dreef','3 dagen op rij',ms>=3],['☄️','Niet te stoppen','7 dagen op rij',ms>=7],['🏆','Weekwinnaar','Meeste punten deze week',lead.p>0&&lead.id===id],['🎯','Uitdager','1 weekuitdaging gehaald',chWon(id)>=1],['🦄','Legende','Niveau 8 bereikt',lvl>=8]].map(([e,t,d,ok])=>({e,t,d,ok}))};
+function chalCard(id){
+ const m=mem(id),[a,b]=wkB(0),c=chOf(a),v=chVal(id,c,a,b),done=v>=c.g,dl=Math.max(1,Math.ceil((b-Date.now())/864e5)),u=c.k==='p'?'punten':c.k==='n'?'taken':'dagen',won=chWon(id);
+ return `<div class='card hc'><h2>${c.e} Weekuitdaging</h2>${hq('p_chal')}<b>${c.t}</b><div class='mute'>${c.d}</div><div class='bar' style='margin:10px 0 6px'><i style='width:${Math.min(100,v/c.g*100)}%;background:${m.c}'></i></div><div class='mute'>${done?'Gehaald! 🎉 ':''}${Math.min(v,c.g)} / ${c.g} ${u} · nog ${dl} ${dl===1?'dag':'dagen'}</div><div style='margin-top:10px'>${M.map(x=>`<span style='display:inline-flex;align-items:center;gap:4px;margin:0 10px 4px 0;font-size:.85rem'>${av(x,22)}${chVal(x.id,c,a,b)>=c.g?'✓':chVal(x.id,c,a,b)}</span>`).join('')}</div><p class='mute' style='margin:8px 0 0'>🏆 ${won} ${won===1?'uitdaging':'uitdagingen'} gehaald in de laatste 12 weken</p></div>`}
+function trofCard(id){
+ const m=mem(id),bd=bdgs(id),n=bd.filter(x=>x.ok).length,lvl=Math.floor(sumP(id)/25)+1;
+ return sec('trof','Trofeeën van '+esc(m.n),n+'/'+bd.length,`<div class='mute' style='margin:0 0 10px'>Status: <b style='color:var(--ink)'>${STAT(lvl)}</b> · niveau ${lvl}</div><div class='bdg'>${bd.map(x=>`<div class='bd ${x.ok?'on':'off'}'><b>${x.e}</b>${x.t}<small>${x.d}</small></div>`).join('')}</div>`)}
+function scoreCard(){
+ const per=U.sp||'w',s0=per==='w'?wkStart():per==='m'?moStart():0,rk=M.map(x=>({x,p:sumP(x.id,s0)})).sort((a,b)=>b.p-a.p),top=rk.slice(0,3),rest=rk.slice(3),mx=Math.max(1,rk[0].p);
+ const med=['🥇','🥈','🥉'],hh=[84,60,44],bc=['#FFD23F','#CBD3DC','#E3A66B'],ord=top.length>=3?[1,0,2]:top.length===2?[1,0]:[0];
+ return `<div class='card hc'><h2>🏆 Scorebord</h2>${hq('p_score')}<div class='chips' style='padding:2px 0 0'>${[['w','Week'],['m','Maand'],['t','Totaal']].map(([k,n])=>`<button class='chip ${per===k?'on':''}' data-a='sbp' data-v='${k}'>${n}</button>`).join('')}</div>${rk[0].p>0?`<div class='pod'>${ord.map(i=>{const r=top[i];return `<div>${med[i]}<div style='margin:2px 0'>${av(r.x,i===0?52:42)}</div><div style='overflow:hidden;text-overflow:ellipsis;white-space:nowrap'>${esc(r.x.n)}</div><div class='blk' style='height:${hh[i]}px;background:${bc[i]}'>${r.p}</div></div>`}).join('')}</div>${rest.map((r,i)=>`<div class='row'><b>${i+4}</b>${av(r.x,26)}<div class='grow'>${esc(r.x.n)}<div class='bar' style='margin-top:4px'><i style='width:${r.p/mx*100}%;background:${r.x.c}'></i></div></div><span class='pts'>${r.p}</span></div>`).join('')}`:`<div class='empty' style='margin-top:10px'>Nog geen punten in deze periode. Vink een taak af en sta als eerste op het podium!</div>`}</div>`}
+function vProfiel(){
+ const id=M.some(m=>m.id===U.pf)?U.pf:M.some(m=>m.id===ME)?ME:M[0].id,m=mem(id),cts=S.ct.filter(c=>c.o===id);
+ const mine=S.lg.filter(l=>l.w===id),tot=sumP(id),lvl=Math.floor(tot/25)+1,nx=tot%25,dk=l=>iso(new Date(l.ts));
+ const days=[...Array(7)].map((_,i)=>{const d=add(today,i-6),k=iso(d);return{l:d.toLocaleDateString('nl-NL',{weekday:'short'}),p:mine.filter(l=>dk(l)===k).reduce((a,l)=>a+l.p,0)}});
+ const mx=Math.max(1,...days.map(d=>d.p)),ds=new Set(mine.map(dk));
+ let st=0,c=new Date(today);if(!ds.has(iso(c)))c=add(c,-1);while(ds.has(iso(c))){st++;c=add(c,-1)}
+ const rank=M.map(x=>({x,p:sumP(x.id)})).sort((a,b)=>b.p-a.p),last=mine.slice(-5).reverse();
+ return `<div class='top'><div class='tt'><h1>Profiel</h1>${bell()}</div></div>
+ <div class='card' style='margin-top:6px'><div class='inline' style='align-items:center'><button class='avb' data-a='avpk' aria-expanded='${!!U.avo}' aria-label='Kies je profielfoto'>${av(cur(),56)}<span class='ed'>✎</span></button><div class='grow'><b>Jij bent ${esc(cur().n)}</b><div class='mute'>${ROL[cur().r]}</div></div><button class='btn ghost' data-a='switch'>Uitloggen</button></div>${U.avo?avPicker():''}</div>
+ <div class='chips'>${M.map(x=>`<button class='chip ${x.id===id?'on':''}' data-a='pf' data-v='${x.id}'>${av(x,22)}${esc(x.n)}</button>`).join('')}</div>
+ <div class='card hc'><div class='inline' style='align-items:center;padding-right:34px;flex-wrap:wrap'>${av(m,32)}<h2 style='margin:0'>${esc(m.n)}</h2><span class='pts'>${STAT(lvl)} · niveau ${lvl}</span></div>${hq('p_punten')}
+ <div class='big' style='margin:12px 0 8px'>${tot} <span class='mute' style='font-size:1rem;font-weight:400'>punten totaal</span></div>
+ <div class='bar'><i style='width:${nx/25*100}%;background:${m.c}'></i></div><p class='mute' style='margin:6px 0 0'>Nog ${25-nx} punten tot niveau ${lvl+1} · ${avail(id)} te besteden</p></div>
+ <div class='card'><div class='sg'><div class='st'><b>${sumP(id,wkStart())}</b>Deze week</div><div class='st'><b>${sumP(id,moStart())}</b>Deze maand</div><div class='st'><b>${mine.length}</b>Taken gedaan</div><div class='st'><b>${st}</b>Dagen op rij</div></div></div>
+ <div class='card hc'><h2>Laatste 7 dagen</h2>${hq('p_week')}<div class='chart'>${days.map(d=>`<div><small>${d.p||''}</small><i style='height:${Math.round(d.p/mx*70)}px;background:${m.c}'></i><small>${d.l}</small></div>`).join('')}</div></div>
+ ${chalCard(id)}
+ ${trofCard(id)}
+ ${scoreCard()}
+ ${bgCard(id)}
+ <div class='card'><h2>Laatst gedaan</h2>${last.length?last.map(l=>`<div class='row'><div class='grow'><b>${esc(l.t)}</b><div class='mute'>${new Date(l.ts).toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'})}</div></div><span class='pts'>+${l.p}</span></div>`).join(''):`<div class='empty'>Nog geen taken gedaan. Vink een taak af om punten te verdienen.</div>`}</div>
+ <div class='card hc'><button class='chip' style='width:100%;justify-content:space-between' data-a='twl' aria-expanded='${!!U.wo}'><span>Verlanglijst van ${esc(m.n)} (${S.wl.filter(w=>w.o===id).length})</span><span>${U.wo?'▴':'▾'}</span></button>${hq('p_wens')}${U.wo?`${S.wl.filter(w=>w.o===id).map(w=>`<div class='row'><div class='grow'><b>${esc(w.t)}</b>${w.d?`<div class='mute'>${esc(w.d)}</div>`:''}</div><button class='x' data-a='wldel' data-v='${w.id}' aria-label='Verwijder ${esc(w.t)}'>×</button></div>`).join('')||`<div class='empty' style='margin-top:8px'>Nog niets op de lijst.</div>`}<div class='form'><input data-k='nw.t' placeholder='Wat wil je graag hebben?' value='${esc(U.nw.t)}' aria-label='Titel'><input data-k='nw.d' placeholder='Beschrijving (maat, kleur, link…)' value='${esc(U.nw.d)}' aria-label='Beschrijving'><button class='btn' data-a='wladd' data-v='${id}'>Toevoegen</button></div>`:''}</div>
+ ${sec('pc','Contacten van '+esc(m.n),'('+cts.length+')',`${cts.length?cts.map(ctRow).join(''):`<div class='empty'>Nog geen contacten. Voeg een klasgenoot, neefje of vriendje toe.</div>`}<div class='form'><input data-k='nct.n' placeholder='Naam' value='${esc(U.nct.n)}' aria-label='Naam contact'><div class='inline'><select data-k='nct.r' aria-label='Relatie'>${REL.map(r=>`<option ${U.nct.r===r?'selected':''}>${r}</option>`).join('')}</select><input data-k='nct.t' type='tel' placeholder='Telefoon (optioneel)' value='${esc(U.nct.t)}' aria-label='Telefoon'></div><button class='btn' data-a='ctadd' data-v='${id}'>Contact toevoegen</button></div><button class='btn ghost' style='margin-top:10px' data-a='tab' data-v='contacten'>Alle contacten (${S.ct.length})</button>`)}
+ ${sec('tut','Hoe werkt de app?','tutorials',tutHtml())}
+ <div class='card hc'><button class='chip' style='width:100%;justify-content:space-between' data-a='tgs' aria-expanded='${!!U.so}'><span>Instellingen</span><span>${U.so?'▴':'▾'}</span></button>${hq('p_inst')}${U.so?`<h2 style='margin-top:14px'>Kleurenpalet</h2><div class='pal'>${PK.map(k=>`<button class='${PAL===k?'on':''}' data-a='pal' data-v='${k}' aria-pressed='${PAL===k}'><i class='sw' style='background:linear-gradient(135deg,${P[k].c} 50%,${P[k].l['--hi']||'#FFD23F'} 50%)'></i>${P[k].n}</button>`).join('')}</div><h2 style='margin-top:14px'>Weergave</h2><div class='chips' style='padding:0'>${[['auto','Automatisch'],['light','Licht'],['dark','Donker']].map(([k,n])=>`<button class='chip ${MODE===k?'on':''}' data-a='mode' data-v='${k}'>${n}</button>`).join('')}</div><h2 style='margin-top:14px'>Uitleg</h2><div class='chips' style='padding:0'>${[['1','Vraagtekens tonen'],['0','Verbergen']].map(([k,n])=>`<button class='chip ${(HLP?'1':'0')===k?'on':''}' data-a='hlpset' data-v='${k}'>${n}</button>`).join('')}</div><p class='mute' style='margin:10px 0 0'>Verbergt de kleine ?-knopjes. De tutorials hierboven blijven altijd beschikbaar. Dit geldt alleen voor jouw toestel.</p>`:''}</div>
+ ${pwCard()}
+ ${sec('legal','Privacy & disclaimer','v'+LEGAL.v,legalHtml())}
+ <button class='btn ghost' style='margin-top:14px' data-a='tab' data-v='gezin'>Gezinsleden beheren</button>`}
+/* ---- uitnodigen via WhatsApp / sms ---- */
+const num=t=>{const d=(t||'').replace(/[^\d+]/g,'');if(d[0]==='+')return d.slice(1);if(d.startsWith('00'))return d.slice(2);if(d[0]==='0')return '31'+d.slice(1);return d};
+const shareHtml=e=>{
+ const cs=(e.c||[]).map(i=>S.ct.find(c=>c.id===i)).filter(Boolean);if(!cs.length)return '';
+ const p=(cs.find(c=>c.t)||{}).t||'',tx=encodeURIComponent(`Hoi! Zullen we afspreken: ${e.t} op ${dn(e.d)}${e.h?' om '+e.h:''}?`);
+ return `<div class='dots' style='margin-top:6px'><a class='lnk' target='_blank' rel='noopener' href='https://wa.me/${num(p)}?text=${tx}'>WhatsApp</a><a class='lnk' target='_blank' rel='noopener' href='sms:${p.replace(/[^\d+]/g,'')}?&body=${tx}'>SMS</a></div>`};
+/* ---- contacten ---- */
+const REL=['Klasgenoot','Neefje','Nichtje','Vriend(in)','Opa/oma','Buur','Anders'];
+const cn=ids=>(ids||[]).map(i=>(S.ct.find(c=>c.id===i)||{}).n).filter(Boolean).join(', ');
+const ctRow=c=>`<div class='row'><div class='grow'><b>${esc(c.n)}</b><div class='mute'>${esc(c.r)}${c.t?' · '+esc(c.t):''}</div></div><button class='btn ghost' data-a='ctplan' data-v='${c.id}'>Plan afspraak</button><button class='x' data-a='ctdel' data-v='${c.id}' aria-label='Verwijder ${esc(c.n)}'>×</button></div>`;
+function vContacten(){
+ const g=M.map(m=>({m,l:S.ct.filter(c=>c.o===m.id)})).filter(x=>x.l.length);
+ return `<div class='top'><div class='tt'><h1>Contacten</h1><button class='btn ghost' data-a='tab' data-v='profiel'>Terug</button></div><p class='sub'>Klasgenoten, neefjes en vrienden van het hele gezin.</p></div>${g.length?g.map(x=>`<div class='card'><h2><i class='dot' style='background:${x.m.c}'></i>${esc(x.m.n)}</h2>${x.l.map(ctRow).join('')}</div>`).join(''):`<div class='card'><div class='empty'>Nog geen contacten. Voeg ze toe bij Profiel.</div></div>`}`}
+/* ---- kleurenpaletten ---- */
+const P={
+ standaard:{n:'Standaard',c:'#14263B',l:{},d:{}},
+ oceaan:{n:'Oceaan',c:'#0E7C86',l:{'--bg':'#EEF6F7','--acc':'#0E7C86','--onacc':'#ffffff','--hi':'#7FD6DD'},d:{'--bg':'#0B1D22','--card':'#12292F','--line':'#1F3B43','--acc':'#6FD3DC','--onacc':'#0B1D22','--hi':'#6FD3DC'}},
+ bos:{n:'Bos',c:'#2F7D4F',l:{'--bg':'#F0F6F0','--acc':'#2F7D4F','--onacc':'#ffffff','--hi':'#BFE3A0'},d:{'--bg':'#0E1A12','--card':'#16261B','--line':'#233A2A','--acc':'#8FD6A0','--onacc':'#0E1A12','--hi':'#8FD6A0'}},
+ zonsondergang:{n:'Zonsondergang',c:'#C4374A',l:{'--bg':'#FBF2EE','--acc':'#C4374A','--onacc':'#ffffff','--hi':'#FFB562'},d:{'--bg':'#1D1115','--card':'#2A1A1F','--line':'#44292F','--acc':'#FF8FA0','--onacc':'#1D1115','--hi':'#FFB562'}},
+ lavendel:{n:'Lavendel',c:'#6B4FBB',l:{'--bg':'#F3F0FA','--acc':'#6B4FBB','--onacc':'#ffffff','--hi':'#D8C8FF'},d:{'--bg':'#151225','--card':'#1F1A36','--line':'#352E56','--acc':'#B9A5FF','--onacc':'#151225','--hi':'#B9A5FF'}},
+ koningsblauw:{n:'Koningsblauw',c:'#2F55D4',l:{'--bg':'#EFF2FC','--acc':'#2F55D4','--onacc':'#ffffff','--hi':'#A9BDFF'},d:{'--bg':'#0D1426','--card':'#151E38','--line':'#26335A','--acc':'#8FA8FF','--onacc':'#0D1426','--hi':'#8FA8FF'}},
+ honing:{n:'Honing',c:'#98600F',l:{'--bg':'#FBF5EA','--acc':'#98600F','--onacc':'#ffffff','--hi':'#FFD36B'},d:{'--bg':'#1C1608','--card':'#291F0E','--line':'#443517','--acc':'#F2BE5C','--onacc':'#1C1608','--hi':'#F2BE5C'}},
+ flamingo:{n:'Flamingo',c:'#C2336F',l:{'--bg':'#FCF0F5','--acc':'#C2336F','--onacc':'#ffffff','--hi':'#FFB3D1'},d:{'--bg':'#1F0E17','--card':'#2D1623','--line':'#4A2638','--acc':'#FF9CC4','--onacc':'#1F0E17','--hi':'#FF9CC4'}},
+ terracotta:{n:'Terracotta',c:'#A8452A',l:{'--bg':'#FAF1ED','--acc':'#A8452A','--onacc':'#ffffff','--hi':'#F5B895'},d:{'--bg':'#1C110D','--card':'#291A14','--line':'#44291F','--acc':'#F0A184','--onacc':'#1C110D','--hi':'#F0A184'}},
+ grafiet:{n:'Grafiet',c:'#3D4551',l:{'--bg':'#F2F3F5','--acc':'#3D4551','--onacc':'#ffffff','--hi':'#C9D1DB'},d:{'--bg':'#101214','--card':'#1A1D21','--line':'#2C3137','--acc':'#C9D1DB','--onacc':'#101214','--hi':'#C9D1DB'}}
+};
+const PK=Object.keys(P);
+let PAL='standaard',MODE='auto';
+try{PAL=localStorage.getItem('gp_pal')||PAL;MODE=localStorage.getItem('gp_mode')||MODE}catch(e){}
+if(!P[PAL])PAL='standaard';
+function applyTheme(){
+ const r=document.documentElement,dm=matchMedia('(prefers-color-scheme: dark)').matches,dark=MODE==='dark'||(MODE==='auto'&&dm);
+ if(MODE==='auto')r.removeAttribute('data-theme');else r.setAttribute('data-theme',MODE);
+ ['--bg','--card','--line','--acc','--onacc','--hi'].forEach(k=>r.style.removeProperty(k));
+ const t=P[PAL][dark?'d':'l'];for(const k in t)r.style.setProperty(k,t[k])}
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',applyTheme)}catch(e){}
+applyTheme();
+R=NET.room;R.on('call',onSig);R.onPeers(()=>{if(U.v==='bellen'&&!pc)render()});
+let BOOT=!!NET.token,BOOTERR='';
+async function startSession(){const d=await NET.getState();load(d.state);ME=NET.user.mid;try{localStorage.setItem('gp_me',ME)}catch(e){}NET.connect()}
+async function doAuth(){const A=U.au;if(A.b)return;A.b=1;render();
+ try{let d;
+  if(A.m==='new')d=await NET.api('/family',{familyName:A.g,name:A.n,password:A.p,color:A.c});
+  else if(A.m==='join')d=await NET.api('/join',{code:A.f,name:A.n,password:A.p,color:A.c});
+  else d=await NET.api('/login',{code:A.f,name:A.n,password:A.p});
+  NET.setSession(d);A.p='';await startSession();if(A.m==='new')U.v='thuis'
+ }catch(e){toast(e.message)}A.b=0;render()}
+NET.onstate=(st,f)=>adopt(st,f);
+NET.onlogout=()=>{ME=null;try{localStorage.removeItem('gp_me')}catch(e){}load(seed());U.au.p='';render();toast('Je bent uitgelogd. Log opnieuw in.')};
+ME=null;
+if(NET.token)startSession().catch(e=>{BOOTERR=e.message}).finally(()=>{BOOT=false;render()});
+render();
+</script>
+<script>
+/* Service worker: alleen op een echte website (https), niet binnen claude.ai */
+if('serviceWorker' in navigator&&/^https?:/.test(location.protocol)&&!/claude/.test(location.hostname)){
+ addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})});
+}
+</script>
+</body>
+</html>
