@@ -1,9 +1,6 @@
-/* Gezinsplanner service worker
-   - Pagina's: eerst het netwerk (altijd de nieuwste versie), anders de offline kopie.
-   - Overige bestanden en lettertypen: uit de cache, op de achtergrond vernieuwd.
-   Verander VERSION als je de lijst SHELL aanpast. */
+/* Gezinsplanner service worker (alle bestanden in de hoofdmap) */
 const VERSION = 'gp-v2';
-const SHELL = ['./', 'index.html', 'net.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/favicon.svg'];
+const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'favicon.svg'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -20,15 +17,17 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
-  if (url.pathname.startsWith('/api/')) return;   // gegevens en live verbinding komen altijd van de server, nooit uit de cache
   const sameOrigin = url.origin === location.origin;
   const isFont = /(^|\.)fonts\.(googleapis|gstatic)\.com$/.test(url.hostname);
-  if (!sameOrigin && !isFont) return;           // andere diensten: niet aanraken
+  if (!sameOrigin && !isFont) return;
 
   if (req.mode === 'navigate') {
+    const isApp = url.pathname.endsWith('/') || url.pathname.endsWith('/index.html');
     e.respondWith(
-      fetch(req).then(res => { const copy = res.clone(); caches.open(VERSION).then(c => c.put('index.html', copy)); return res; })
-        .catch(() => caches.match('index.html'))
+      fetch(req).then(res => {
+        if (isApp) { const copy = res.clone(); caches.open(VERSION).then(c => c.put('index.html', copy)); }
+        return res;
+      }).catch(() => caches.match(isApp ? 'index.html' : req).then(r => r || caches.match('index.html')))
     );
     return;
   }
