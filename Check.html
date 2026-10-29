@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Controle Gezinsplanner</title>
+<style>
+body{font:16px/1.45 system-ui,sans-serif;margin:0;padding:18px;background:#F4F6F9;color:#14263B}
+h1{font-size:1.3rem;margin:0 0 4px}p{margin:0 0 12px;color:#556}
+.r{background:#fff;border-radius:12px;padding:10px 12px;margin:8px 0;border-left:6px solid #bbb;word-break:break-word}
+.ok{border-color:#2f9e44}.no{border-color:#d9480f}.wa{border-color:#f59f00}
+b{display:block}small{color:#556}
+button{font:inherit;font-weight:700;padding:12px 16px;border:0;border-radius:12px;background:#14263B;color:#fff;margin-top:10px}
+pre{white-space:pre-wrap;background:#fff;border-radius:12px;padding:10px;font-size:.8rem}
+</style></head><body>
+<h1>Controle Gezinsplanner</h1>
+<p>Wacht een paar seconden. Maak daarna een screenshot van deze pagina of tik op Kopieer.</p>
+<div id="out"></div>
+<button id="cp">Kopieer resultaat</button>
+<pre id="txt"></pre>
+<script>
+const out=document.getElementById('out'),lines=[];
+function add(t,s,d){const x=document.createElement('div');x.className='r '+s;x.innerHTML='<b>'+(s==='ok'?'✓ ':s==='no'?'✗ ':'! ')+t+'</b>'+(d?'<small>'+d+'</small>':'');out.appendChild(x);lines.push((s==='ok'?'OK  ':s==='no'?'FOUT':'LET OP')+' - '+t+(d?' ('+d.replace(/<[^>]*>/g,'')+')':''));document.getElementById('txt').textContent=lines.join('\n')}
+const get=async(u)=>{try{const r=await fetch(u,{cache:'no-store'});return r}catch(e){return null}};
+(async()=>{
+ add('Adres',location.protocol==='https:'||location.hostname==='localhost'?'ok':'no',location.href);
+ add('Browser',/Chrome|CriOS|Safari|Firefox|SamsungBrowser/.test(navigator.userAgent)?'ok':'wa',navigator.userAgent.slice(0,110));
+ if(/FBAN|FBAV|Instagram|WhatsApp|Line\/|; wv\)/.test(navigator.userAgent))add('Je zit in een ingebouwde browser','no','Open de link in Chrome (Android) of Safari (iPhone). Installeren kan niet vanuit WhatsApp, Facebook of andere apps.');
+ if(matchMedia('(display-mode: standalone)').matches)add('Je opent dit al als geïnstalleerde app','wa','Installeren is dan niet meer nodig.');
+ let man=null,mr=await get('manifest.webmanifest');
+ if(!mr||!mr.ok)add('manifest.webmanifest ophalen','no',mr?'Status '+mr.status+' (bestand ontbreekt op GitHub of staat in een submap)':'Geen verbinding');
+ else{
+  const ct=mr.headers.get('content-type')||'onbekend';
+  try{man=await mr.json();add('manifest.webmanifest','ok','Naam: '+man.name+' · type: '+ct)}catch(e){add('manifest.webmanifest lezen','no','Het bestand is geen geldige JSON')}
+ }
+ if(man){
+  add('start_url en display',man.start_url&&man.display==='standalone'?'ok':'no','start_url='+man.start_url+' display='+man.display);
+  const ic=man.icons||[];add('Aantal iconen in manifest',ic.length>=2?'ok':'no',String(ic.length));
+  for(const i of ic){
+   const u=new URL(i.src,new URL('manifest.webmanifest',location.href)).href;
+   const r=await get(u);
+   if(!r||!r.ok){add('Icoon '+i.sizes+' ('+i.purpose+')','no',(r?'Status '+r.status:'Geen verbinding')+' - '+i.src+' · de map icons staat niet goed op GitHub');continue}
+   const b=await r.blob();
+   const dim=await new Promise(res=>{const im=new Image();im.onload=()=>res(im.naturalWidth+'x'+im.naturalHeight);im.onerror=()=>res(null);im.src=URL.createObjectURL(b)});
+   add('Icoon '+i.sizes+' ('+i.purpose+')',dim?'ok':'no',dim?('Geladen, '+dim+', type '+b.type):'Bestand is geen geldige afbeelding');
+  }
+ }
+ const sr=await get('sw.js');
+ add('sw.js ophalen',sr&&sr.ok?'ok':'no',sr?'Status '+sr.status:'Geen verbinding');
+ const ir=await get('index.html');
+ add('index.html ophalen',ir&&ir.ok?'ok':'no',ir?'Status '+ir.status:'Geen verbinding');
+ try{
+  if(!('serviceWorker' in navigator))add('Service worker','no','Deze browser ondersteunt het niet');
+  else{const reg=await navigator.serviceWorker.getRegistration();add('Service worker geregistreerd',reg?'ok':'wa',reg?'Actief: '+!!reg.active:'Open eerst de hoofdpagina van de app en kom dan terug')}
+ }catch(e){add('Service worker','no',String(e))}
+ let got=false;
+ window.addEventListener('beforeinstallprompt',e=>{got=true;e.preventDefault();add('De browser zegt: te installeren','ok','Gebruik het menu, dan App installeren')});
+ setTimeout(()=>{if(!got)add('Installeerbaar volgens de browser','wa','Geen installatieaanbod ontvangen. Chrome op Android toont dit pas als alles hierboven groen is. Op iPhone is dit normaal: gebruik Safari, Deel, Zet op beginscherm.')},4000);
+})();
+document.getElementById('cp').onclick=async()=>{try{await navigator.clipboard.writeText(lines.join('\n'));alert('Gekopieerd')}catch(e){alert('Maak een screenshot')}};
+</script></body></html>
